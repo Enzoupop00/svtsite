@@ -1,391 +1,206 @@
-document.addEventListener('DOMContentLoaded', () => {
+/* --- Bases & Reset --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
 
-    // ==========================================
-    // 1. EFFET ARRIÈRE-PLAN : BULLES CONTINUES
-    // ==========================================
-    const bubblesContainer = document.getElementById('bubbles');
-    function generateBubble() {
-        const bubble = document.createElement('div');
-        bubble.classList.add('bubble');
-        const size = Math.random() * 20 + 6;
-        bubble.style.width = `${size}px`;
-        bubble.style.height = `${size}px`;
-        bubble.style.left = `${Math.random() * 100}%`;
-        bubble.style.animationDuration = `${Math.random() * 6 + 6}s`;
-        bubblesContainer.appendChild(bubble);
-        setTimeout(() => bubble.remove(), 10000);
-    }
-    setInterval(generateBubble, 450);
+body {
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    color: #e2f1f5;
+    background-color: #020710;
+    overflow-x: hidden;
+    user-select: none;
+}
 
+/* --- Background & Bulles --- */
+.video-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+}
+#bg-video { width: 100%; height: 100%; object-fit: cover; }
+.overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, rgba(2, 7, 16, 0.75) 0%, rgba(3, 18, 36, 0.9) 100%);
+}
 
-    // ==========================================
-    // 2. SIMULATEUR D'IMPACT ÉCOLOGIQUE
-    // ==========================================
-    const rangePlastic = document.getElementById('range-plastic');
-    const rangeTemp = document.getElementById('range-temp');
-    const valPlastic = document.getElementById('val-plastic');
-    const valTemp = document.getElementById('val-temp');
-    const ecoAquarium = document.getElementById('eco-aquarium');
-    const ecoStatus = document.getElementById('eco-status');
-    const ecoCoral = document.getElementById('eco-coral');
-    const ecoTurtle = document.getElementById('eco-turtle');
+.bubbles-container { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; }
+.bubble {
+    position: absolute; bottom: -30px; background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
+    animation: floatUp 10s infinite linear;
+}
 
-    function runSimulator() {
-        const plastic = parseInt(rangePlastic.value);
-        const temp = parseInt(rangeTemp.value);
+@keyframes floatUp {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    5% { opacity: 0.5; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(-105vh) translateX(40px); opacity: 0; }
+}
 
-        const plasticText = ["Faible", "Modérée", "Critique"];
-        valPlastic.textContent = plasticText[plastic];
-        valTemp.textContent = `+${temp}°C`;
+/* --- Navigation --- */
+header {
+    position: fixed; top: 0; width: 100%;
+    background: rgba(2, 7, 16, 0.85); backdrop-filter: blur(12px);
+    z-index: 1000; border-bottom: 1px solid rgba(0, 210, 255, 0.1);
+}
+.navbar { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 15px 20px; }
+.logo { font-size: 1.5rem; font-weight: bold; }
+.logo span { color: #00d2ff; }
+.nav-links { display: flex; list-style: none; }
+.nav-links a { color: #a5b5c1; text-decoration: none; padding: 8px 15px; font-weight: 500; transition: 0.3s; }
+.nav-links a:hover, .nav-links a.active { color: #00d2ff; }
 
-        let coral = "🪸 Récif sain et coloré.";
-        let faune = "🐢 Les tortues nagent en sécurité.";
-        let status = "Intact ✓";
-        let color = "#00d2ff";
-        let bg = "rgba(2, 10, 22, 0.8)";
+/* --- Structures Générales --- */
+.hero-section { height: 100vh; display: flex; justify-content: center; align-items: center; text-align: center; }
+.hero-content h1 {
+    font-size: 3.8rem; margin-bottom: 20px;
+    background: linear-gradient(to right, #fff, #00d2ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.content-section { max-width: 1200px; margin: 0 auto; padding: 100px 20px; }
+.dark-bg { background: rgba(3, 13, 27, 0.8); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); }
+h2 { font-size: 2.5rem; text-align: center; color: #fff; }
+.intro { text-align: center; color: #8fa0af; margin-bottom: 50px; }
 
-        if (plastic >= 1) faune = "⚠ Danger : Plastiques confondus avec des méduses.";
-        if (plastic === 2) faune = "💀 Critique : Mort par ingestion de micro-plastiques.";
-        if (temp === 1) coral = "🪸 Début de stress thermique (Pâleur).";
-        if (temp >= 2) coral = "🪸 Blanchissement massif des coraux.";
-        if (temp === 3) coral = "🪺 Récif mort, effondrement de la biodiversité.";
+.game-section-header {
+    display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 10px; position: relative;
+}
+#btn-admin-lock {
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 210, 255, 0.3);
+    color: #fff; font-size: 1.3rem; padding: 6px 10px; border-radius: 50%; cursor: pointer; transition: 0.2s;
+    position: absolute; right: 10px;
+}
+#btn-admin-lock:hover { background: #ff9f43; border-color: #fff; transform: rotate(45deg); }
 
-        if ((plastic + temp) >= 2) { status = "Menacé ⚠"; color = "#ff9f43"; bg = "rgba(35, 20, 5, 0.8)"; }
-        if ((plastic + temp) >= 4) { status = "DANGER CRITIQUE 🚨"; color = "#ff5252"; bg = "rgba(35, 5, 10, 0.8)"; }
+/* --- Grid & Cartes --- */
+.grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+.card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 30px; border-radius: 12px; }
+.card h3 { color: #00d2ff; margin-bottom: 10px; }
 
-        ecoStatus.textContent = status;
-        ecoStatus.style.color = color;
-        ecoCoral.textContent = coral;
-        ecoTurtle.textContent = faune;
-        ecoAquarium.style.borderColor = color;
-        ecoAquarium.style.backgroundColor = bg;
-    }
-    rangePlastic.addEventListener('input', runSimulator);
-    rangeTemp.addEventListener('input', runSimulator);
+/* --- Boîtes Ombrées --- */
+.shadow-box { background: rgba(2, 10, 22, 0.9); border: 1px solid rgba(0, 210, 255, 0.15); padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
+/* --- Simulateur --- */
+.simulator-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; }
+.control-group { margin-bottom: 20px; }
+.control-group label { display: block; margin-bottom: 8px; }
+input[type="range"] { width: 100%; -webkit-appearance: none; background: #10253d; height: 6px; border-radius: 5px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #00d2ff; border-radius: 50%; cursor: pointer; }
+.ecosystem-display { display: flex; flex-direction: column; justify-content: center; gap: 15px; border-left: 4px solid #00d2ff; transition: 0.4s; }
+.status-indicator { font-size: 1.2rem; font-weight: bold; }
+.eco-element { padding: 12px; background: rgba(255,255,255,0.02); border-radius: 6px; }
 
-    // ==========================================
-    // 3. MINI-JEU 1 : LE NETTOYEUR & LEADERBOARD GLOBAL
-    // ==========================================
-    const btnStartClicker = document.getElementById('btn-start-clicker');
-    const selectDifficulty = document.getElementById('select-difficulty');
-    const clickerArena = document.getElementById('clicker-arena');
-    const clickerScoreDisplay = document.getElementById('clicker-score');
-    const clickerTimerDisplay = document.getElementById('clicker-timer');
-    const leaderboardUl = document.getElementById('leaderboard-ul');
-    const btnClearScores = document.getElementById('btn-clear-scores');
-    const tabButtons = document.querySelectorAll('.tab-btn');
+/* --- Configuration du Jeu --- */
+.setup-container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; }
+.setup-container select { background: #10253d; color: #fff; border: 1px solid #00d2ff; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 1rem; }
 
-    let clickerScore = 0;
-    let timeLeft = 0;
-    let spawnIntervalId;
-    let countdownIntervalId;
-    let isPlaying = false;
-    let gameDifficulty = 'medium'; 
-    let currentActiveTab = 'easy'; // Difficultée affichée sur le tableau
+.game-layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+.game-stats { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.2rem; }
+.highlight { color: #00d2ff; font-weight: bold; font-size: 1.4rem; }
+.btn-game { background: #00d2ff; color: #020710; border: none; padding: 12px 24px; font-weight: bold; border-radius: 5px; cursor: pointer; transition: 0.2s; text-align: center;}
+.btn-game:hover { transform: scale(1.03); background: #00a8cc; box-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }
+.btn-game:disabled { background: #3d5a6c; color: #8fa0af; cursor: not-allowed; transform: none; box-shadow: none;}
 
-    const trashItems = ['🍼', '🛍️', '🥤', '📦'];
-    const creatureItems = ['🪼', '🐟', '🐠', '🦀', '🐙'];
+.game-arena {
+    width: 100%; height: 400px;
+    background: radial-gradient(circle, #052244 0%, #010a16 100%);
+    border: 2px dashed rgba(0, 210, 255, 0.3); border-radius: 10px;
+    position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center;
+}
+#game-welcome-msg { color: #647b93; text-align: center; font-style: italic; padding: 20px; z-index: 10; }
 
-    const difficultySettings = {
-        easy: { time: 60, spawnRate: 950, speed: '5.5s' },
-        medium: { time: 45, spawnRate: 650, speed: '4.0s' },
-        hard: { time: 30, spawnRate: 350, speed: '2.1s' }
-    };
+.ocean-entity { position: absolute; font-size: 2.5rem; cursor: pointer; animation: sinkDown linear forwards; }
 
-    // Charger le leaderboard global filtré par l'onglet sélectionné
-    function renderLeaderboard(difficultyFilter) {
-        let allScores = JSON.parse(localStorage.getItem('oceanGlobalScores')) || [];
-        
-        // Filtrer uniquement pour la difficulté demandée
-        let filteredScores = allScores.filter(item => item.diff === difficultyFilter);
-        
-        leaderboardUl.innerHTML = "";
-        
-        if (filteredScores.length === 0) {
-            leaderboardUl.innerHTML = "<li style='color:#647b93; font-style:italic; font-size:0.9rem;'>Aucun score enregistré dans cette catégorie.</li>";
-            return;
-        }
+@keyframes sinkDown {
+    0% { top: -60px; opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 105%; opacity: 0; }
+}
 
-        // Tri décroissant et affichage du top 5
-        filteredScores.sort((a, b) => b.score - a.score);
-        let topFive = filteredScores.slice(0, 5);
+/* --- LEADERBOARD TABS --- */
+.leaderboard-container h3 { color: #fff; margin-bottom: 10px; text-align: center; }
+.leaderboard-tabs { display: flex; gap: 5px; margin-bottom: 15px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 6px; }
+.tab-btn {
+    flex: 1; padding: 8px 4px; background: none; border: none; color: #a5b5c1;
+    font-size: 0.85rem; font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.2s;
+}
+.tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.tab-btn.active { color: #020710; background: #00d2ff; }
 
-        topFive.forEach((entry, index) => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <div><span class="rank">#${index + 1}</span> ${entry.name}</div>
-                <div class="highlight">${entry.score} pts</div>
-            `;
-            leaderboardUl.appendChild(li);
-        });
-    }
+.leaderboard-list { list-style: none; min-height: 180px; }
+.leaderboard-list li {
+    display: flex; justify-content: space-between; padding: 10px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 1rem;
+}
+.leaderboard-list li span.rank { color: #00d2ff; font-weight: bold; margin-right: 8px; }
 
-    // Sauvegarde globale
-    function saveGlobalScore(name, score, diff) {
-        let allScores = JSON.parse(localStorage.getItem('oceanGlobalScores')) || [];
-        allScores.push({ name: name, score: score, diff: diff });
-        localStorage.setItem('oceanGlobalScores', JSON.stringify(allScores));
-        
-        // Basculer l'affichage du leaderboard sur l'onglet correspondant à la partie jouée
-        currentActiveTab = diff;
-        tabButtons.forEach(btn => {
-            btn.classList.remove('active');
-            if(btn.dataset.tab === diff) btn.classList.add('active');
-        });
-        renderLeaderboard(currentActiveTab);
-    }
+/* --- QUIZ STYLES --- */
+.quiz-header-status { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-weight: bold; }
+#quiz-level-indicator { text-transform: uppercase; letter-spacing: 1px; color: #00d2ff; }
+.quiz-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+.btn-option { 
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; 
+    padding: 16px; border-radius: 8px; cursor: pointer; text-align: left; font-size: 1rem; transition: 0.2s; 
+}
+.btn-option:hover { background: rgba(0, 210, 255, 0.12); border-color: #00d2ff; }
+.btn-option.correct-flash { background-color: #2ed573 !important; border-color: #2ed573 !important; color: #020710 !important; font-weight: bold; box-shadow: 0 0 15px rgba(46, 213, 115, 0.6); }
+.btn-option.wrong-flash { background-color: #ff4757 !important; border-color: #ff4757 !important; color: #fff !important; box-shadow: 0 0 15px rgba(255, 71, 87, 0.4); }
 
-    // Gestion du clic sur les onglets du leaderboard
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            currentActiveTab = button.dataset.tab;
-            renderLeaderboard(currentActiveTab);
-        });
-    });
+/* --- MODAL DIALOG : PSEUDO STYLE (CENTRE) --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(2, 7, 16, 0.85); backdrop-filter: blur(8px);
+    z-index: 2000; display: flex; justify-content: center; align-items: center;
+    transition: opacity 0.3s ease;
+}
+.modal-content {
+    width: 90%; max-width: 420px; text-align: center;
+    animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    function spawnOceanEntity() {
-        if (!isPlaying) return;
-        const entity = document.createElement('div');
-        entity.classList.add('ocean-entity');
-        
-        const isTrash = Math.random() < 0.6;
-        if (isTrash) {
-            entity.textContent = trashItems[Math.floor(Math.random() * trashItems.length)];
-            entity.dataset.type = "trash";
-        } else {
-            entity.textContent = creatureItems[Math.floor(Math.random() * creatureItems.length)];
-            entity.dataset.type = "creature";
-        }
-        
-        entity.style.left = `${Math.random() * 88 + 4}%`;
-        entity.style.animationDuration = difficultySettings[gameDifficulty].speed;
-        
-        entity.addEventListener('mousedown', () => {
-            if (entity.dataset.type === "trash") {
-                clickerScore += 1;
-            } else {
-                clickerScore -= 2;
-                entity.style.transform = "scale(1.4) rotate(15deg)";
-            }
-            clickerScoreDisplay.textContent = clickerScore;
-            entity.remove();
-        });
+.modal-content h3 { font-size: 1.6rem; color: #fff; margin-bottom: 10px; }
+.modal-content input[type="text"] {
+    width: 100%; padding: 12px; margin: 20px 0; background: #0c1a2d;
+    border: 1px solid #00d2ff; border-radius: 6px; color: #fff; font-size: 1.1rem;
+    text-align: center; outline: none;
+}
+.modal-content input[type="text"]:focus { box-shadow: 0 0 10px rgba(0,210,255,0.5); }
+.modal-content .btn-game { width: 100%; }
 
-        clickerArena.appendChild(entity);
-        setTimeout(() => entity.remove(), 6000);
-    }
+/* --- FENÊTRE ADMIN GRABABLE (DRAGGABLE WINDOW) --- */
+.draggable-window {
+    position: fixed; top: 25%; left: 35%; width: 320px;
+    background: rgba(4, 18, 38, 0.95); border: 2px solid #ff9f43;
+    border-radius: 8px; z-index: 3000; box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+    overflow: hidden;
+}
+.draggable-header {
+    background: #ff9f43; color: #020710; padding: 10px 15px;
+    font-weight: bold; cursor: move; display: flex; justify-content: space-between; align-items: center;
+}
+.draggable-header button {
+    background: none; border: none; font-size: 1.4rem; font-weight: bold;
+    color: #020710; cursor: pointer; line-height: 1;
+}
+.draggable-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.btn-admin-action {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+    color: #e2f1f5; padding: 10px; border-radius: 5px; font-weight: 600;
+    cursor: pointer; text-align: left; transition: 0.2s; font-size: 0.85rem;
+}
+.btn-admin-action:hover { background: rgba(255, 159, 67, 0.15); border-color: #ff9f43; }
 
-    function endGame() {
-        isPlaying = false;
-        clearInterval(spawnIntervalId);
-        clearInterval(countdownIntervalId);
-        
-        btnStartClicker.disabled = false;
-        selectDifficulty.disabled = false;
-        btnStartClicker.textContent = "Relancer la mission";
-        
-        clickerArena.innerHTML = `
-            <div id='game-welcome-msg'>
-                <h3 style='color:#00d2ff; margin-bottom:5px;'>Temps écoulé ! ⏱️</h3>
-                <p>Score récolté : <span class='highlight'>${clickerScore} points</span>.</p>
-            </div>
-        `;
+.hidden { display: none !important; }
+footer { text-align: center; padding: 40px; border-top: 1px solid rgba(255,255,255,0.05); color: #4b5e6d; }
+.burger { display: none; cursor: pointer; }
+.burger div { width: 25px; height: 3px; background: #fff; margin: 5px; transition: 0.3s; }
 
-        setTimeout(() => {
-            const playerName = prompt(`Partie finie (${gameDifficulty.toUpperCase()}) ! Score : ${clickerScore} pts.\nEntrez votre pseudonyme :`);
-            if (playerName && playerName.trim() !== "") {
-                saveGlobalScore(playerName.trim(), clickerScore, gameDifficulty);
-            }
-        }, 300);
-    }
-
-    btnStartClicker.addEventListener('click', () => {
-        isPlaying = true;
-        clickerScore = 0;
-        gameDifficulty = selectDifficulty.value;
-        timeLeft = difficultySettings[gameDifficulty].time;
-
-        btnStartClicker.disabled = true;
-        selectDifficulty.disabled = true;
-        btnStartClicker.textContent = "Nettoyage en cours...";
-        
-        clickerScoreDisplay.textContent = clickerScore;
-        clickerTimerDisplay.textContent = `${timeLeft}s`;
-        clickerArena.innerHTML = "";
-
-        spawnIntervalId = setInterval(spawnOceanEntity, difficultySettings[gameDifficulty].spawnRate);
-        countdownIntervalId = setInterval(() => {
-            timeLeft--;
-            clickerTimerDisplay.textContent = `${timeLeft}s`;
-            if (timeLeft <= 0) endGame();
-        }, 1000);
-    });
-
-    btnClearScores.addEventListener('click', () => {
-        if(confirm("Voulez-vous effacer l'intégralité de la base de données des scores ?")) {
-            localStorage.removeItem('oceanGlobalScores');
-            renderLeaderboard(currentActiveTab);
-        }
-    });
-
-    // Initialisation du premier tableau de vision (Facile par défaut)
-    renderLeaderboard(currentActiveTab);
-
-
-    // ==========================================
-    // 4. MINI-JEU 2 : LE GRAND QUIZ ÉVOLUTIF (15 QUESTIONS)
-    // ==========================================
-    const quizDatabase = {
-        easy: [
-            { q: "Quel déchet trouve-t-on en masse sur les plages ?", o: ["Les bouteilles en verre", "Les mégots et plastiques", "Les restes de bois artificiels"], a: 1 },
-            { q: "Quel animal marin est célèbre pour manger des sacs plastiques en pensant que ce sont des méduses ?", o: ["La tortue marine", "Le requin blanc", "L'étoile de mer"], a: 0 },
-            { q: "D'où provient la majorité de la pollution plastique des océans ?", o: ["Des navires de croisière", "De la terre ferme (fleuves et rivières)", "Des plates-formes pétrolières"], a: 1 },
-            { q: "Que signifie le sigle 'Zéro Déchet' dans la protection de la nature ?", o: ["Tout brûler", "Réduire, réutiliser et recycler au maximum", "Jeter dans des poubelles violettes"], a: 1 },
-            { q: "Les coraux sont considérés comme des :", o: ["Animaux marins vivants", "Plantes aquatiques colorées", "Roches minérales décoratives"], a: 0 }
-        ],
-        medium: [
-            { q: "Quel pourcentage de l'oxygène de notre planète est généré par les océans (le phytoplancton) ?", o: ["Environ 20%", "Environ 50%", "Plus de 90%"], a: 1 },
-            { q: "Qu'appelle-t-on le '7ème continent' ?", o: ["Un nouvel archipel volcanique", "Une immense zone d'accumulation de plastiques dans le Pacifique", "La calotte glaciaire de l'Arctique"], a: 1 },
-            { q: "Quelle est la cause principale du blanchissement destructeur des coraux ?", o: ["Le manque de poissons", "L'élévation de la température marine", "Le passage des sous-marins"], a: 1 },
-            { q: "Combien de temps met une bouteille plastique standard pour se dégrader ?", o: ["Environ 10 ans", "Environ 150 ans", "Environ 450 ans"], a: 2 },
-            { q: "Quel est l'impact des microplastiques sur les poissons ?", o: ["Ils les aident à flotter", "Ils s'accumulent dans leur corps et les empoisonnent", "Ils purifient leur estomac"], a: 1 }
-        ],
-        hard: [
-            { q: "Quel phénomène physique est lié à l'absorption massive de $CO_2$ anthropique par l'océan ?", o: ["L'acidification des eaux", "La désalinisation des courants", "La désoxygénation totale"], a: 0 },
-            { q: "Quelle technique de pêche commerciale détruit lourdement les fonds sédimentaires ?", o: ["La pêche à la ligne plombée", "Le chalutage de fond", "La pêche à la senne de surface"], a: 1 },
-            { q: "Quel polluant invisible mais mortel perturbe l'écolocalisation des baleines ?", o: ["La pollution sonore des moteurs", "Les ondes radioélectriques", "La luminosité côtière"], a: 0 },
-            { q: "Quel pourcentage des espèces marines dépend directement de la survie des récifs coralliens ?", o: ["Moins de 5%", "Environ 25%", "Près de 80%"], a: 1 },
-            { q: "Qu'est-ce que le 'Vortex de déchets' ?", o: ["Une tempête de plastique", "Un puissant courant circulaire qui emprisonne les débris", "Un trou noir océanique"], a: 1 }
-        ]
-    };
-
-    let quizLevelsOrder = ['easy', 'medium', 'hard'];
-    let currentLevelIndex = 0; // 0=Easy, 1=Medium, 2=Hard
-    let currentQuestionIndex = 0; // 0 à 4 par niveau
-    let globalQuizScore = 0;
-
-    const quizQuestion = document.getElementById('quiz-question');
-    const quizOptions = document.getElementById('quiz-options');
-    const quizBox = document.getElementById('quiz-box');
-    const quizResults = document.getElementById('quiz-results');
-    const quizFinalScore = document.getElementById('quiz-final-score');
-    const btnRestartQuiz = document.getElementById('btn-restart-quiz');
-    const quizLevelIndicator = document.getElementById('quiz-level-indicator');
-    const quizProgressIndicator = document.getElementById('quiz-progress-indicator');
-
-    function loadEvolutiveQuestion() {
-        let currentLevelKey = quizLevelsOrder[currentLevelIndex];
-        let questionsList = quizDatabase[currentLevelKey];
-
-        // Vérifie si on a épuisé les questions du niveau en cours
-        if (currentQuestionIndex >= questionsList.length) {
-            currentLevelIndex++; // Passe au niveau suivant
-            currentQuestionIndex = 0; // Reset l'index interne
-            
-            if (currentLevelIndex >= quizLevelsOrder.length) {
-                // FIN ABSOLUE DU QUIZ (15 questions faites)
-                showQuizResults();
-                return;
-            }
-            currentLevelKey = quizLevelsOrder[currentLevelIndex];
-            questionsList = quizDatabase[currentLevelKey];
-        }
-
-        // Mises à jour des libellés de l'interface
-        let levelNamesHTML = { easy: "<span style='color:#2ed573;'>Facile</span>", medium: "<span style='color:#ff9f43;'>Moyen</span>", hard: "<span style='color:#ff4757;'>Difficile ⚡</span>" };
-        quizLevelIndicator.innerHTML = `Niveau : ${levelNamesHTML[currentLevelKey]}`;
-        quizProgressIndicator.textContent = `Question ${currentQuestionIndex + 1} / 5`;
-
-        const activeQuestionData = questionsList[currentQuestionIndex];
-        quizQuestion.textContent = activeQuestionData.q;
-        quizOptions.innerHTML = "";
-
-        activeQuestionData.o.forEach((option, idx) => {
-            const button = document.createElement('button');
-            button.classList.add('btn-option');
-            button.textContent = option;
-            button.addEventListener('click', () => handleQuizAnswer(button, idx, activeQuestionData.a));
-            quizOptions.appendChild(button);
-        });
-    }
-
-    function handleQuizAnswer(button, selectedIdx, correctIdx) {
-        const allButtons = quizOptions.querySelectorAll('.btn-option');
-        allButtons.forEach(btn => btn.style.pointerEvents = 'none'); // Bloque les clics simultanés
-
-        if (selectedIdx === correctIdx) {
-            globalQuizScore++;
-            button.classList.add('correct-flash');
-        } else {
-            button.classList.add('wrong-flash');
-            allButtons[correctIdx].classList.add('correct-flash');
-        }
-
-        setTimeout(() => {
-            currentQuestionIndex++;
-            loadEvolutiveQuestion();
-        }, 1200);
-    }
-
-    function showQuizResults() {
-        quizBox.classList.add('hidden');
-        quizResults.classList.remove('hidden');
-        quizFinalScore.textContent = globalQuizScore;
-
-        let badge = "";
-        if (globalQuizScore <= 5) badge = "Niveau : Apprenti Moussaillon 🌊. Continuez à vous informer !";
-        else if (globalQuizScore <= 10) badge = "Niveau : Gardien de la Mer 🐬. Très bonnes connaissances !";
-        else if (globalQuizScore < 15) badge = "Niveau : Défenseur des Océans 🐋. Excellent score !";
-        else badge = "Niveau : Dieu Poséidon 🔱. Perfection absolue, l'océan vous remercie !";
-        
-        document.getElementById('quiz-badge').textContent = badge;
-    }
-
-    btnRestartQuiz.addEventListener('click', () => {
-        currentLevelIndex = 0;
-        currentQuestionIndex = 0;
-        globalQuizScore = 0;
-        quizResults.classList.add('hidden');
-        quizBox.classList.remove('hidden');
-        loadEvolutiveQuestion();
-    });
-
-    // Lancement du quiz au chargement
-    loadEvolutiveQuestion();
-
-
-    // ==========================================
-    // 5. NAV MOBILE & SCROLL REVEAL
-    // ==========================================
-    const burger = document.querySelector('.burger');
-    const nav = document.querySelector('.nav-links');
-    const navLinks = document.querySelectorAll('.nav-links a');
-    const sections = document.querySelectorAll('section');
-    const reveals = document.querySelectorAll('.reveal');
-
-    burger.addEventListener('click', () => {
-        nav.classList.toggle('nav-active');
-        burger.classList.toggle('toggle');
-    });
-
-    window.addEventListener('scroll', () => {
-        let currentId = '';
-        const topOfWindow = window.innerHeight;
-
-        reveals.forEach(el => {
-            if (el.getBoundingClientRect().top < topOfWindow - 100) el.classList.add('active');
-        });
-
-        sections.forEach(sec => {
-            if (pageYOffset >= (sec.offsetTop - sec.clientHeight / 3)) currentId = sec.getAttribute('id');
-        });
-
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href').includes(currentId)) link.classList.add('active');
-        });
-    });
-});
+@media screen and (max-width: 900px) {
+    .game-layout-grid { grid-template-columns: 1fr; }
+    .simulator-container { grid-template-columns: 1fr; }
+    .quiz-options-grid { grid-template-columns: 1fr; }
+}
