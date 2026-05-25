@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oceania Odyssée - Grand Défi</title>
+    <title>Oceania Odyssée - Édition Maître</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Arrière-plan Immersif -->
     <div class="video-container">
         <video autoplay muted loop playsinline id="bg-video">
             <source src="https://assets.mixkit.co/videos/preview/mixkit-sea-turtle-swimming-underwater-41901-large.mp4" type="video/mp4">
@@ -17,7 +16,6 @@
         <div class="bubbles-container" id="bubbles"></div>
     </div>
 
-    <!-- Barre de Navigation -->
     <header>
         <nav class="navbar">
             <div class="logo">𓆉 Bio<span>Marine</span></div>
@@ -35,7 +33,6 @@
         </nav>
     </header>
 
-    <!-- Accueil -->
     <section id="accueil" class="hero-section">
         <div class="hero-content">
             <h1>L'Odyssée Bleue Interactive</h1>
@@ -44,7 +41,6 @@
         </div>
     </section>
 
-    <!-- Section Biodiversité -->
     <section id="biodiversite" class="content-section">
         <h2>Écosystèmes en Péril</h2>
         <div class="grid-container">
@@ -61,7 +57,6 @@
         </div>
     </section>
 
-    <!-- Section Simulateur -->
     <section id="simulateur" class="content-section">
         <h2>1. Simulateur d'Impact Écologique</h2>
         <div class="simulator-container">
@@ -84,12 +79,14 @@
         </div>
     </section>
 
-    <!-- ZONE DES MINI-JEUX -->
     <section id="mini-jeux" class="content-section dark-bg">
-        <h2>2. Le Laboratoire de Jeux Interactifs</h2>
+        
+        <div class="game-section-header">
+            <h2>2. Le Laboratoire de Jeux Interactifs</h2>
+            <button id="btn-admin-lock" title="Panneau d'administration">⚙️</button>
+        </div>
         <p class="intro">Testez vos compétences. Nettoyez l'océan et inscrivez votre nom dans la légende globale.</p>
 
-        <!-- JEU 1 : Mission Nettoyage Évolué -->
         <div class="game-wrapper reveal">
             <h3>🎮 Mission : Nettoyer la Baie des Tortues</h3>
             <p style="margin-bottom: 20px;">Cliquez sur les déchets (<span style="font-size:1.1rem;">🍼🛍️</span>) pour obtenir <strong>+1 pt</strong>. Évitez la faune marine (<span style="font-size:1.1rem;">🐟🪼</span>) sous peine de perdre <strong>-2 pts</strong> !</p>
@@ -105,7 +102,6 @@
             </div>
 
             <div class="game-layout-grid">
-                <!-- Zone de Jeu Actif -->
                 <div class="clicker-game-container shadow-box">
                     <div class="game-stats">
                         <div>Score : <span id="clicker-score" class="highlight">0</span></div>
@@ -116,11 +112,9 @@
                     </div>
                 </div>
 
-                <!-- Tableau des Meilleurs Scores Globaux & Filtrables -->
                 <div class="leaderboard-container shadow-box">
                     <h3>🏆 Classement Global</h3>
                     
-                    <!-- Onglets de sélection du classement -->
                     <div class="leaderboard-tabs">
                         <button class="tab-btn active" data-tab="easy">Facile</button>
                         <button class="tab-btn" data-tab="medium">Moyen</button>
@@ -128,16 +122,13 @@
                     </div>
 
                     <ul class="leaderboard-list" id="leaderboard-ul">
-                        <!-- Rempli dynamiquement par JavaScript -->
-                    </ul>
-                    <button id="btn-clear-scores" style="background:none; border:none; color:#ff5252; cursor:pointer; font-size:0.8rem; margin-top:15px; text-decoration:underline;">Réinitialiser l'historique</button>
+                        </ul>
                 </div>
             </div>
         </div>
 
         <div style="margin-top: 60px;"></div>
 
-        <!-- JEU 2 : Éco-Quiz Tri-Difficulté -->
         <div class="game-wrapper reveal">
             <h3>🎮 Mission : Le Grand Éco-Quiz Évolutif</h3>
             <p style="margin-bottom: 20px;">Répondez correctement pour gravir les échelons. Le quiz s'intensifie : <span style="color:#2ed573; font-weight:bold;">Facile</span> ➔ <span style="color:#ff9f43; font-weight:bold;">Moyen</span> ➔ <span style="color:#ff4757; font-weight:bold;">Difficile</span> !</p>
@@ -160,6 +151,31 @@
             </div>
         </div>
     </section>
+
+    <div id="modal-pseudo-overlay" class="modal-overlay hidden">
+        <div class="modal-content shadow-box">
+            <h3>🎉 Mission Accomplie !</h3>
+            <p>Votre score est de <span id="modal-score-display" class="highlight">0</span> points.</p>
+            <p style="font-size: 0.9rem; color: #a5b5c1; margin-top: 5px;">Entrez votre pseudo pour rejoindre le classement mondial :</p>
+            <input type="text" id="input-player-pseudo" placeholder="Ex: CapitaineNémo" maxlength="15">
+            <button id="btn-submit-pseudo" class="btn-game">Enregistrer mon exploit</button>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="draggable-window hidden">
+        <div id="admin-panel-header" class="draggable-header">
+            <span>🛠️ Panneau Super-Admin</span>
+            <button id="btn-close-admin">×</button>
+        </div>
+        <div class="draggable-body">
+            <p style="font-size: 0.85rem; color: #ff5252; margin-bottom: 15px; font-weight: bold;">⚠️ Zone de réinitialisation chirurgicale :</p>
+            <button class="btn-admin-action" id="reset-easy-btn">Effacer Leaderboard [FACILE]</button>
+            <button class="btn-admin-action" id="reset-medium-btn">Effacer Leaderboard [MOYEN]</button>
+            <button class="btn-admin-action" id="reset-hard-btn">Effacer Leaderboard [DIFFICILE]</button>
+            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:12px 0;">
+            <button class="btn-admin-action" id="reset-all-btn" style="background:#ff4757; color:#fff;">Tout Réinitialiser (Global)</button>
+        </div>
+    </div>
 
     <footer>
         <p>&copy; 2026 BioMarine Interactif - Éduquer par le jeu.</p>
