@@ -1,10 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==========================================
-    // 1. EFFET ARRIÈRE-PLAN : BULLES CONTINUES
+    // 1. EFFET ARRIÈRE-PLAN : BULLES (CONSERVÉ)
     // ==========================================
     const bubblesContainer = document.getElementById('bubbles');
     function generateBubble() {
+        if(!bubblesContainer) return;
         const bubble = document.createElement('div');
         bubble.classList.add('bubble');
         const size = Math.random() * 20 + 6;
@@ -17,133 +18,275 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     setInterval(generateBubble, 450);
 
-    // ==========================================
-    // 2. SIMULATEUR D'IMPACT ÉCOLOGIQUE
-    // ==========================================
-    const rangePlastic = document.getElementById('range-plastic');
-    const rangeTemp = document.getElementById('range-temp');
-    const valPlastic = document.getElementById('val-plastic');
-    const valTemp = document.getElementById('val-temp');
-    const ecoAquarium = document.getElementById('eco-aquarium');
-    const ecoStatus = document.getElementById('eco-status');
-    const ecoCoral = document.getElementById('eco-coral');
-    const ecoTurtle = document.getElementById('eco-turtle');
+    // Éléments du DOM d'Authentification / Sessions
+    const authContainer = document.getElementById('auth-container');
+    const mainApp = document.getElementById('main-app');
+    const authUsernameInput = document.getElementById('auth-username');
+    const authError = document.getElementById('auth-error');
+    const btnLogin = document.getElementById('btn-login');
+    const displayProfileName = document.getElementById('display-profile-name');
+    const btnLogout = document.getElementById('btn-logout');
 
-    function runSimulator() {
-        const plastic = parseInt(rangePlastic.value);
-        const temp = parseInt(rangeTemp.value);
-
-        const plasticText = ["Faible", "Modérée", "Critique"];
-        valPlastic.textContent = plasticText[plastic];
-        valTemp.textContent = `+${temp}°C`;
-
-        let coral = "🪸 Récif sain et coloré.";
-        let faune = "🐢 Les tortues nagent en sécurité.";
-        let status = "Intact ✓";
-        let color = "#00d2ff";
-        let bg = "rgba(2, 10, 22, 0.8)";
-
-        if (plastic >= 1) faune = "⚠ Danger : Plastiques confondus avec des méduses.";
-        if (plastic === 2) faune = "💀 Critique : Mort par ingestion de micro-plastiques.";
-        if (temp === 1) coral = "🪸 Début de stress thermique (Pâleur).";
-        if (temp >= 2) coral = "🪸 Blanchissement massif des coraux.";
-        if (temp === 3) coral = "🪺 Récif mort, effondrement de la biodiversité.";
-
-        if ((plastic + temp) >= 2) { status = "Menacé ⚠"; color = "#ff9f43"; bg = "rgba(35, 20, 5, 0.8)"; }
-        if ((plastic + temp) >= 4) { status = "DANGER CRITIQUE 🚨"; color = "#ff5252"; bg = "rgba(35, 5, 10, 0.8)"; }
-
-        ecoStatus.textContent = status;
-        ecoStatus.style.color = color;
-        ecoCoral.textContent = coral;
-        ecoTurtle.textContent = faune;
-        ecoAquarium.style.borderColor = color;
-        ecoAquarium.style.backgroundColor = bg;
-    }
-    rangePlastic.addEventListener('input', runSimulator);
-    rangeTemp.addEventListener('input', runSimulator);
-
-
-    // ==========================================
-    // 3. MINI-JEU 1 : LE NETTOYEUR (CLASSEMENT GLOBAL)
-    // ==========================================
+    // Éléments Mini-jeu Solo d'origine
     const btnStartClicker = document.getElementById('btn-start-clicker');
     const selectDifficulty = document.getElementById('select-difficulty');
     const clickerArena = document.getElementById('clicker-arena');
     const clickerScoreDisplay = document.getElementById('clicker-score');
     const clickerTimerDisplay = document.getElementById('clicker-timer');
+
+    // Éléments Réseau / Lobby
+    const inviteSearchInput = document.getElementById('invite-search-username');
+    const btnSendInvite = document.getElementById('btn-send-invite');
+    const inviteStatus = document.getElementById('invite-status');
+    const incomingInviteBox = document.getElementById('incoming-invite-box');
+    const challengerName = document.getElementById('challenger-name');
+    const btnAcceptMatch = document.getElementById('btn-accept-match');
+    const btnRefuseMatch = document.getElementById('btn-refuse-match');
     const leaderboardUl = document.getElementById('leaderboard-ul');
-    const tabButtons = document.querySelectorAll('.tab-btn');
+    const leaderboardSearchFilter = document.getElementById('leaderboard-search-filter');
 
-    // Modal Éléments
-    const modalPseudoOverlay = document.getElementById('modal-pseudo-overlay');
-    const modalScoreDisplay = document.getElementById('modal-score-display');
-    const inputPlayerPseudo = document.getElementById('input-player-pseudo');
-    const btnSubmitPseudo = document.getElementById('btn-submit-pseudo');
+    // Éléments Match Multi
+    const arenaMatchWrapper = document.getElementById('arena-match-wrapper');
+    const matchMyScoreDisplay = document.getElementById('match-my-score');
+    const matchOppScoreDisplay = document.getElementById('match-opp-score');
+    const matchTimerDisplay = document.getElementById('match-timer');
+    const matchClickerArena = document.getElementById('match-clicker-arena');
 
-    let clickerScore = 0;
-    let timeLeft = 0;
-    let spawnIntervalId;
-    let countdownIntervalId;
-    let isPlaying = false;
-    let gameDifficulty = 'medium'; 
-    let currentActiveTab = 'easy';
+    // Variables globales
+    let myUsername = "";
+    let socket = null;
+    let onlinePlayers = [];
+    let currentMatch = null; 
+    let myScore = 0;
+    let oppScore = 0;
+    let matchInterval = null;
+    let spawnInterval = null;
 
+    // Variables du Jeu Solo d'origine
+    let soloScore = 0;
+    let soloTimeLeft = 0;
+    let soloSpawnIntervalId;
+    let soloCountdownIntervalId;
+    let soloIsPlaying = false;
     const trashItems = ['🍼', '🛍️', '🥤', '📦'];
     const creatureItems = ['🪼', '🐟', '🐠', '🦀', '🐙'];
-
     const difficultySettings = {
-        easy: { time: 60, spawnRate: 950, speed: '5.5s' },
-        medium: { time: 45, spawnRate: 650, speed: '4.0s' },
-        hard: { time: 30, spawnRate: 350, speed: '2.1s' }
+        easy: { time: 60, spawnRate: 950 },
+        medium: { time: 45, spawnRate: 650 },
+        hard: { time: 30, spawnRate: 350 }
     };
 
-    function renderLeaderboard(difficultyFilter) {
-        let allScores = JSON.parse(localStorage.getItem('oceanGlobalScoresMaster')) || [];
-        let filteredScores = allScores.filter(item => item.diff === difficultyFilter);
+    // ==========================================
+    // 2. PERSISTANCE DE CONNEXION AUTOMATIQUE
+    // ==========================================
+    const savedName = localStorage.getItem('oceania_pseudo');
+    if (savedName) {
+        initMultiplayer(savedName);
+    }
+
+    btnLogin.addEventListener('click', () => {
+        const username = authUsernameInput.value.trim().toLowerCase().replace(/\s+/g, '');
+        if (username.length < 3) {
+            authError.textContent = "Votre pseudo doit faire au moins 3 caractères !";
+            return;
+        }
+        initMultiplayer(username);
+    });
+
+    btnLogout.addEventListener('click', () => {
+        localStorage.removeItem('oceania_pseudo');
+        location.reload();
+    });
+
+    // ==========================================
+    // 3. LOGIQUE RÉSEAU (RELAY PUBLIC WEBSOCKET)
+    // ==========================================
+    function initMultiplayer(username) {
+        myUsername = username;
+        localStorage.setItem('oceania_pseudo', username);
         
+        authContainer.classList.add('hidden');
+        mainApp.classList.remove('hidden');
+        displayProfileName.textContent = myUsername.toUpperCase();
+
+        // Connexion au réseau libre partagé
+        socket = new WebSocket('wss://demo.piesocket.com/v3/channel_oceania_2026?api_key=VCXCEuvhGcBDP7XhiJJUDvR1e1D3YfV0w9IpIskB&notify_self=0');
+
+        socket.onopen = () => {
+            sendNetMessage("ping_presence", { user: myUsername });
+        };
+
+        socket.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                handleNetworkData(msg);
+            } catch(e) { }
+        };
+    }
+
+    function sendNetMessage(type, data) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: type, ...data }));
+        }
+    }
+
+    function handleNetworkData(msg) {
+        if (msg.type === "ping_presence") {
+            if (!onlinePlayers.includes(msg.user) && msg.user !== myUsername) {
+                onlinePlayers.push(msg.user);
+                updatePlayersList();
+            }
+            sendNetMessage("reply_presence", { target: msg.user, user: myUsername });
+        }
+
+        if (msg.type === "reply_presence" && msg.target === myUsername) {
+            if (!onlinePlayers.includes(msg.user)) {
+                onlinePlayers.push(msg.user);
+                updatePlayersList();
+            }
+        }
+
+        if (msg.type === "invite_request" && msg.target === myUsername) {
+            challengerName.textContent = msg.from.toUpperCase();
+            incomingInviteBox.classList.remove('hidden');
+            
+            btnAcceptMatch.onclick = () => {
+                incomingInviteBox.classList.add('hidden');
+                sendNetMessage("invite_response", { target: msg.from, from: myUsername, status: "accepted" });
+                setupMultiplayerGame(msg.from, false);
+            };
+
+            btnRefuseMatch.onclick = () => {
+                incomingInviteBox.classList.add('hidden');
+                sendNetMessage("invite_response", { target: msg.from, from: myUsername, status: "refused" });
+            };
+        }
+
+        if (msg.type === "invite_response" && msg.target === myUsername) {
+            if (msg.status === "accepted") {
+                inviteStatus.style.color = "#2ed573";
+                inviteStatus.textContent = "Match accepté ! Lancement de l'arène...";
+                setupMultiplayerGame(msg.from, true);
+            } else {
+                inviteStatus.style.color = "#ff4757";
+                inviteStatus.textContent = `${msg.from} a décliné le combat.`;
+            }
+        }
+
+        if (msg.type === "score_update" && msg.target === myUsername) {
+            oppScore = msg.score;
+            matchOppScoreDisplay.textContent = oppScore;
+        }
+
+        if (msg.type === "timer_sync" && msg.target === myUsername) {
+            matchTimerDisplay.textContent = msg.time + "s";
+            if (msg.time <= 0) cleanEndMultiplayerMatch(msg.from);
+        }
+    }
+
+    // ==========================================
+    // 4. SYSTÈME DE FILTRE DE RECHERCHE DU LOBBY
+    // ==========================================
+    function updatePlayersList() {
+        const filterQuery = leaderboardSearchFilter.value.trim().toLowerCase();
         leaderboardUl.innerHTML = "";
-        if (filteredScores.length === 0) {
-            leaderboardUl.innerHTML = "<li style='color:#647b93; font-style:italic; font-size:0.9rem;'>Aucun score enregistré ici.</li>";
+
+        const filtered = onlinePlayers.filter(name => name.includes(filterQuery));
+
+        if (filtered.length === 0) {
+            leaderboardUl.innerHTML = "<li style='color:#647b93; font-style:italic; font-size:0.9rem;'>Aucun éco-citoyen connecté avec ce pseudo...</li>";
             return;
         }
 
-        filteredScores.sort((a, b) => b.score - a.score);
-        let topFive = filteredScores.slice(0, 5);
-
-        topFive.forEach((entry, index) => {
+        filtered.forEach(player => {
             const li = document.createElement('li');
             li.innerHTML = `
-                <div><span class="rank">#${index + 1}</span> ${entry.name}</div>
-                <div class="highlight">${entry.score} pts</div>
+                <div><span style="color:#2ed573; margin-right:5px;">🟢</span> ${player}</div>
+                <button class="btn-game" style="padding: 4px 10px; font-size: 0.8rem;" onclick="document.getElementById('invite-search-username').value='${player}'">Sélectionner</button>
             `;
             leaderboardUl.appendChild(li);
         });
     }
 
-    function saveGlobalScore(name, score, diff) {
-        let allScores = JSON.parse(localStorage.getItem('oceanGlobalScoresMaster')) || [];
-        allScores.push({ name: name, score: score, diff: diff });
-        localStorage.setItem('oceanGlobalScoresMaster', JSON.stringify(allScores));
-        
-        currentActiveTab = diff;
-        tabButtons.forEach(btn => {
-            btn.classList.remove('active');
-            if(btn.dataset.tab === diff) btn.classList.add('active');
-        });
-        renderLeaderboard(currentActiveTab);
-    }
+    leaderboardSearchFilter.addEventListener('input', updatePlayersList);
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            currentActiveTab = button.dataset.tab;
-            renderLeaderboard(currentActiveTab);
-        });
+    btnSendInvite.addEventListener('click', () => {
+        const target = inviteSearchInput.value.trim().toLowerCase();
+        if (target === myUsername) {
+            inviteStatus.style.color = "#ff4757";
+            inviteStatus.textContent = "Vous ne pouvez pas vous inviter vous-même !";
+            return;
+        }
+        if(target === "") return;
+        inviteStatus.style.color = "#ff9f43";
+        inviteStatus.textContent = `Invitation envoyée à ${target}...`;
+        sendNetMessage("invite_request", { target: target, from: myUsername });
     });
 
-    function spawnOceanEntity() {
-        if (!isPlaying) return;
+    // ==========================================
+    // 5. FONCTIONNEMENT DU DUEL MULTIJOUEUR
+    // ==========================================
+    function setupMultiplayerGame(opponentName, isHost) {
+        currentMatch = opponentName;
+        myScore = 0;
+        oppScore = 0;
+        matchMyScoreDisplay.textContent = "0";
+        matchOppScoreDisplay.textContent = "0";
+        arenaMatchWrapper.classList.remove('hidden');
+        matchClickerArena.innerHTML = "";
+
+        if (isHost) {
+            let gameTime = 20; 
+            matchInterval = setInterval(() => {
+                gameTime--;
+                sendNetMessage("timer_sync", { target: opponentName, from: myUsername, time: gameTime });
+                matchTimerDisplay.textContent = gameTime + "s";
+                if (gameTime <= 0) {
+                    clearInterval(matchInterval);
+                    cleanEndMultiplayerMatch(opponentName);
+                }
+            }, 1000);
+        }
+
+        spawnInterval = setInterval(() => {
+            const trash = document.createElement('div');
+            trash.classList.add('ocean-entity');
+            trash.textContent = '🍼';
+            trash.style.left = `${Math.random() * 85 + 5}%`;
+            trash.style.top = `${Math.random() * 70 + 15}%`;
+
+            trash.addEventListener('mousedown', () => {
+                myScore++;
+                matchMyScoreDisplay.textContent = myScore;
+                sendNetMessage("score_update", { target: opponentName, score: myScore });
+                trash.remove();
+            });
+
+            matchClickerArena.appendChild(trash);
+            setTimeout(() => trash.remove(), 1500);
+        }, 600);
+    }
+
+    function cleanEndMultiplayerMatch(opponentName) {
+        clearInterval(spawnInterval);
+        clearInterval(matchInterval);
+        
+        let msg = "";
+        if (myScore > oppScore) msg = `🏆 Victoire contre ${opponentName} (${myScore} - ${oppScore}) ! 🎉`;
+        else if (myScore < oppScore) msg = `💀 Défaite face à ${opponentName} (${myScore} - ${oppScore}).`;
+        else msg = `⚖️ Égalité parfaite (${myScore} partout) !`;
+
+        alert(msg);
+        arenaMatchWrapper.classList.add('hidden');
+        inviteSearchInput.value = "";
+        inviteStatus.textContent = "";
+    }
+
+    // ==========================================
+    // 6. MINI-JEU 1 : LE NETTOYEUR (CONSERVÉ SOLO DIRECT)
+    // ==========================================
+    function spawnSoloEntity() {
+        if (!soloIsPlaying) return;
         const entity = document.createElement('div');
         entity.classList.add('ocean-entity');
         
@@ -157,293 +300,89 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         entity.style.left = `${Math.random() * 88 + 4}%`;
-        entity.style.animationDuration = difficultySettings[gameDifficulty].speed;
+        entity.style.top = `${Math.random() * 70 + 15}%`;
         
         entity.addEventListener('mousedown', () => {
             if (entity.dataset.type === "trash") {
-                clickerScore += 1;
+                soloScore += 1;
             } else {
-                clickerScore -= 2;
-                entity.style.transform = "scale(1.4) rotate(15deg)";
+                soloScore -= 2;
             }
-            clickerScoreDisplay.textContent = clickerScore;
+            clickerScoreDisplay.textContent = soloScore;
             entity.remove();
         });
 
         clickerArena.appendChild(entity);
-        setTimeout(() => entity.remove(), 6000);
+        setTimeout(() => entity.remove(), 2000);
     }
 
-    function endGame() {
-        isPlaying = false;
-        clearInterval(spawnIntervalId);
-        clearInterval(countdownIntervalId);
-        
+    function endSoloGame() {
+        soloIsPlaying = false;
+        clearInterval(soloSpawnIntervalId);
+        clearInterval(soloCountdownIntervalId);
         btnStartClicker.disabled = false;
-        selectDifficulty.disabled = false;
-        btnStartClicker.textContent = "Relancer la mission";
-        
-        clickerArena.innerHTML = `
-            <div id='game-welcome-msg'>
-                <h3 style='color:#00d2ff; margin-bottom:5px;'>Temps écoulé ! ⏱️</h3>
-                <p>Analyse des données terminée.</p>
-            </div>
-        `;
-
-        // Ouvre la MODAL stylée centrée
-        modalScoreDisplay.textContent = clickerScore;
-        inputPlayerPseudo.value = "";
-        modalPseudoOverlay.classList.remove('hidden');
+        btnStartClicker.textContent = "Relancer Mission Solo";
+        clickerArena.innerHTML = `<div id='game-welcome-msg'><h3>Temps écoulé ! ⏱️</h3><p>Score final : ${soloScore} points.</p></div>`;
     }
-
-    btnSubmitPseudo.addEventListener('click', () => {
-        let pseudo = inputPlayerPseudo.value.trim();
-        if (pseudo === "") pseudo = "Anonyme";
-        
-        saveGlobalScore(pseudo, clickerScore, gameDifficulty);
-        modalPseudoOverlay.classList.add('hidden'); // Ferme la boîte
-    });
 
     btnStartClicker.addEventListener('click', () => {
-        isPlaying = true;
-        clickerScore = 0;
-        gameDifficulty = selectDifficulty.value;
-        timeLeft = difficultySettings[gameDifficulty].time;
+        soloIsPlaying = true;
+        soloScore = 0;
+        const diff = selectDifficulty.value;
+        soloTimeLeft = difficultySettings[diff].time;
 
         btnStartClicker.disabled = true;
-        selectDifficulty.disabled = true;
         btnStartClicker.textContent = "Nettoyage en cours...";
-        
-        clickerScoreDisplay.textContent = clickerScore;
-        clickerTimerDisplay.textContent = `${timeLeft}s`;
+        clickerScoreDisplay.textContent = soloScore;
+        clickerTimerDisplay.textContent = soloTimeLeft + "s";
         clickerArena.innerHTML = "";
 
-        spawnIntervalId = setInterval(spawnOceanEntity, difficultySettings[gameDifficulty].spawnRate);
-        countdownIntervalId = setInterval(() => {
-            timeLeft--;
-            clickerTimerDisplay.textContent = `${timeLeft}s`;
-            if (timeLeft <= 0) endGame();
+        soloSpawnIntervalId = setInterval(spawnSoloEntity, difficultySettings[diff].spawnRate);
+        soloCountdownIntervalId = setInterval(() => {
+            soloTimeLeft--;
+            clickerTimerDisplay.textContent = soloTimeLeft + "s";
+            if (soloTimeLeft <= 0) endSoloGame();
         }, 1000);
     });
 
-    renderLeaderboard(currentActiveTab);
-
-
     // ==========================================
-    // 4. PANNEAU ADMIN SÉCURISÉ & DRAGGABLE (GRABABLE)
+    // 7. SECURE PANNEAU ADMIN DRAGGABLE (CONSERVÉ)
     // ==========================================
     const btnAdminLock = document.getElementById('btn-admin-lock');
     const adminPanel = document.getElementById('admin-panel');
     const btnCloseAdmin = document.getElementById('btn-close-admin');
     const adminPanelHeader = document.getElementById('admin-panel-header');
-
-    // Boutons d'actions Admin
-    const resetEasyBtn = document.getElementById('reset-easy-btn');
-    const resetMediumBtn = document.getElementById('reset-medium-btn');
-    const resetHardBtn = document.getElementById('reset-hard-btn');
-    const resetAllBtn = document.getElementById('reset-all-btn');
+    const resetScoresBtn = document.getElementById('reset-scores-btn');
 
     btnAdminLock.addEventListener('click', () => {
-        const code = prompt("Entrez le code d'accès administrateur à 4 chiffres :");
-        if (code === "1234") { // CODE SECRET DE MODIFICATION
-            adminPanel.classList.remove('hidden');
-        } else if (code !== null) {
-            alert("Code erroné ! Accès refusé.");
-        }
+        const code = prompt("Entrez le code administrateur :");
+        if (code === "1234") adminPanel.classList.remove('hidden');
+        else if (code !== null) alert("Code erroné !");
     });
 
     btnCloseAdmin.addEventListener('click', () => adminPanel.classList.add('hidden'));
-
-    // Fonctions de Nettoyage Sélectif du Leaderboard Global
-    function deleteDifficultyScores(difficulty) {
-        if(confirm(`Voulez-vous effacer les scores de la catégorie [${difficulty.toUpperCase()}] ?`)) {
-            let allScores = JSON.parse(localStorage.getItem('oceanGlobalScoresMaster')) || [];
-            let cleanScores = allScores.filter(item => item.diff !== difficulty);
-            localStorage.setItem('oceanGlobalScoresMaster', JSON.stringify(cleanScores));
-            renderLeaderboard(currentActiveTab);
-        }
-    }
-
-    resetEasyBtn.addEventListener('click', () => deleteDifficultyScores('easy'));
-    resetMediumBtn.addEventListener('click', () => deleteDifficultyScores('medium'));
-    resetHardBtn.addEventListener('click', () => deleteDifficultyScores('hard'));
-    
-    resetAllBtn.addEventListener('click', () => {
-        if(confirm("🚨 ALERTE : Supprimer TOUS les scores de TOUTES les difficultés définitivement ?")) {
-            localStorage.removeItem('oceanGlobalScoresMaster');
-            renderLeaderboard(currentActiveTab);
+    resetScoresBtn.addEventListener('click', () => {
+        if(confirm("Voulez-vous vider vos données locales ?")) {
+            localStorage.clear();
+            location.reload();
         }
     });
 
-    // --- SYSTEME DRAGGABLE FLUIDE (GRAB) ---
-    let isDragging = false;
-    let offsetX, offsetY;
-
+    let isDragging = false, offsetX, offsetY;
     adminPanelHeader.addEventListener('mousedown', (e) => {
         isDragging = true;
         offsetX = e.clientX - adminPanel.offsetLeft;
         offsetY = e.clientY - adminPanel.offsetTop;
-        adminPanelHeader.style.cursor = 'grabbing';
     });
-
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         adminPanel.style.left = `${e.clientX - offsetX}px`;
         adminPanel.style.top = `${e.clientY - offsetY}px`;
     });
+    document.addEventListener('mouseup', () => isDragging = false);
 
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-        adminPanelHeader.style.cursor = 'move';
-    });
-
-
-    // ==========================================
-    // 5. MINI-JEU 2 : LE GRAND QUIZ ÉVOLUTIF (15 QUESTIONS)
-    // ==========================================
-    const quizDatabase = {
-        easy: [
-            { q: "Quel déchet trouve-t-on en masse sur les plages ?", o: ["Les bouteilles en verre", "Les mégots et plastiques", "Les restes de bois artificiels"], a: 1 },
-            { q: "Quel animal marin mange des sacs plastiques en pensant que ce sont des méduses ?", o: ["La tortue marine", "Le requin blanc", "L'étoile de mer"], a: 0 },
-            { q: "D'où provient la majorité de la pollution plastique des océans ?", o: ["Des navires de croisière", "De la terre ferme (fleuves et rivières)", "Des plates-formes pétrolières"], a: 1 },
-            { q: "Que signifie le sigle 'Zéro Déchet' dans la protection de la nature ?", o: ["Tout brûler", "Réduire, réutiliser et recycler au maximum", "Jeter dans des poubelles violettes"], a: 1 },
-            { q: "Les coraux sont considérés comme des :", o: ["Animaux marins vivants", "Plantes aquatiques colorées", "Roches minérales décoratives"], a: 0 }
-        ],
-        medium: [
-            { q: "Quel pourcentage de l'oxygène de notre planète est généré par le phytoplancton ?", o: ["Environ 20%", "Environ 50%", "Plus de 90%"], a: 1 },
-            { q: "Qu'appelle-t-on le '7ème continent' ?", o: ["Un nouvel archipel volcanique", "Une immense décharge de débris plastiques flottants", "La calotte glaciaire de l'Arctique"], a: 1 },
-            { q: "Quelle est la cause principale du blanchissement destructeur des coraux ?", o: ["Le manque de poissons", "L'élévation de la température marine", "Le passage des sous-marins"], a: 1 },
-            { q: "Combien de temps met une bouteille plastique standard pour se dégrader ?", o: ["Environ 10 ans", "Environ 150 ans", "Environ 450 ans"], a: 2 },
-            { q: "Quel est l'impact des microplastiques sur les poissons ?", o: ["Ils les aident à flotter", "Ils s'accumulent dans leur corps et les empoisonnent", "Ils purifient leur estomac"], a: 1 }
-        ],
-        hard: [
-            { q: "Quel phénomène physique est lié à l'absorption massive de $CO_2$ anthropique par l'océan ?", o: ["L'acidification des eaux", "La désalinisation des courants", "La désoxygénation totale"], a: 0 },
-            { q: "Quelle technique de pêche commerciale détruit lourdement les fonds sédimentaires ?", o: ["La pêche à la ligne plombée", "Le chalutage de fond", "La pêche à la senne de surface"], a: 1 },
-            { q: "Quel polluant invisible mais mortel perturbe l'écolocalisation des baleines ?", o: ["La pollution sonore des moteurs", "Les ondes radioélectriques", "La luminosité côtière"], a: 0 },
-            { q: "Quel pourcentage des espèces marines dépend directement de la survie des récifs coralliens ?", o: ["Moins de 5%", "Environ 25%", "Près de 80%"], a: 1 },
-            { q: "Qu'est-ce que le 'Vortex de déchets' ?", o: ["Une tempête de plastique", "Un puissant courant circulaire qui emprisonne les débris", "Un trou noir océanique"], a: 1 }
-        ]
-    };
-
-    let quizLevelsOrder = ['easy', 'medium', 'hard'];
-    let currentLevelIndex = 0; 
-    let currentQuestionIndex = 0; 
-    let globalQuizScore = 0;
-
-    const quizQuestion = document.getElementById('quiz-question');
-    const quizOptions = document.getElementById('quiz-options');
-    const quizBox = document.getElementById('quiz-box');
-    const quizResults = document.getElementById('quiz-results');
-    const quizFinalScore = document.getElementById('quiz-final-score');
-    const btnRestartQuiz = document.getElementById('btn-restart-quiz');
-    const quizLevelIndicator = document.getElementById('quiz-level-indicator');
-    const quizProgressIndicator = document.getElementById('quiz-progress-indicator');
-
-    function loadEvolutiveQuestion() {
-        let currentLevelKey = quizLevelsOrder[currentLevelIndex];
-        let questionsList = quizDatabase[currentLevelKey];
-
-        if (currentQuestionIndex >= questionsList.length) {
-            currentLevelIndex++; 
-            currentQuestionIndex = 0; 
-            
-            if (currentLevelIndex >= quizLevelsOrder.length) {
-                showQuizResults();
-                return;
-            }
-            currentLevelKey = quizLevelsOrder[currentLevelIndex];
-            questionsList = quizDatabase[currentLevelKey];
-        }
-
-        let levelNamesHTML = { easy: "<span style='color:#2ed573;'>Facile</span>", medium: "<span style='color:#ff9f43;'>Moyen</span>", hard: "<span style='color:#ff4757;'>Difficile ⚡</span>" };
-        quizLevelIndicator.innerHTML = `Niveau : ${levelNamesHTML[currentLevelKey]}`;
-        quizProgressIndicator.textContent = `Question ${currentQuestionIndex + 1} / 5`;
-
-        const activeQuestionData = questionsList[currentQuestionIndex];
-        quizQuestion.textContent = activeQuestionData.q;
-        quizOptions.innerHTML = "";
-
-        activeQuestionData.o.forEach((option, idx) => {
-            const button = document.createElement('button');
-            button.classList.add('btn-option');
-            button.textContent = option;
-            button.addEventListener('click', () => handleQuizAnswer(button, idx, activeQuestionData.a));
-            quizOptions.appendChild(button);
-        });
-    }
-
-    function handleQuizAnswer(button, selectedIdx, correctIdx) {
-        const allButtons = quizOptions.querySelectorAll('.btn-option');
-        allButtons.forEach(btn => btn.style.pointerEvents = 'none');
-
-        if (selectedIdx === correctIdx) {
-            globalQuizScore++;
-            button.classList.add('correct-flash');
-        } else {
-            button.classList.add('wrong-flash');
-            allButtons[correctIdx].classList.add('correct-flash');
-        }
-
-        setTimeout(() => {
-            currentQuestionIndex++;
-            loadEvolutiveQuestion();
-        }, 1200);
-    }
-
-    function showQuizResults() {
-        quizBox.classList.add('hidden');
-        quizResults.classList.remove('hidden');
-        quizFinalScore.textContent = globalQuizScore;
-
-        let badge = "";
-        if (globalQuizScore <= 5) badge = "Niveau : Apprenti Moussaillon 🌊. Continuez à vous informer !";
-        else if (globalQuizScore <= 10) badge = "Niveau : Gardien de la Mer 🐬. Très bonnes connaissances !";
-        else if (globalQuizScore < 15) badge = "Niveau : Défenseur des Océans 🐋. Excellent score !";
-        else badge = "Niveau : Dieu Poséidon 🔱. Perfection absolue !";
-        
-        document.getElementById('quiz-badge').textContent = badge;
-    }
-
-    btnRestartQuiz.addEventListener('click', () => {
-        currentLevelIndex = 0;
-        currentQuestionIndex = 0;
-        globalQuizScore = 0;
-        quizResults.classList.add('hidden');
-        quizBox.classList.remove('hidden');
-        loadEvolutiveQuestion();
-    });
-
-    loadEvolutiveQuestion();
-
-    // ==========================================
-    // 6. NAVIGATION MOBILE & SCROLL REVEAL
-    // ==========================================
-    const burger = document.querySelector('.burger');
-    const nav = document.querySelector('.nav-links');
-    const navLinks = document.querySelectorAll('.nav-links a');
-    const sections = document.querySelectorAll('section');
-    const reveals = document.querySelectorAll('.reveal');
-
-    burger.addEventListener('click', () => {
-        nav.classList.toggle('nav-active');
-        burger.classList.toggle('toggle');
-    });
-
-    window.addEventListener('scroll', () => {
-        let currentId = '';
-        const topOfWindow = window.innerHeight;
-
-        reveals.forEach(el => {
-            if (el.getBoundingClientRect().top < topOfWindow - 100) el.classList.add('active');
-        });
-
-        sections.forEach(sec => {
-            if (pageYOffset >= (sec.offsetTop - sec.clientHeight / 3)) currentId = sec.getAttribute('id');
-        });
-
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href').includes(currentId)) link.classList.add('active');
-        });
-    });
+    // Maintien de la visibilité sur la liste des joueurs
+    setInterval(() => {
+        if(myUsername) sendNetMessage("ping_presence", { user: myUsername });
+    }, 4000);
 });
