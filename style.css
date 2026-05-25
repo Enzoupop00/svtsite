@@ -204,3 +204,22 @@ footer { text-align: center; padding: 40px; border-top: 1px solid rgba(255,255,2
     .simulator-container { grid-template-columns: 1fr; }
     .quiz-options-grid { grid-template-columns: 1fr; }
 }
+
+/* --- Styles additionnels simples pour l'auth et le multi --- */
+.style-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 90%; max-width: 400px; text-align: center; z-index: 5000;
+}
+#auth-form input {
+    width: 100%; padding: 12px; margin-top: 12px; background: #0c1a2d;
+    border: 1px solid #00d2ff; border-radius: 6px; color: #fff; outline: none;
+}
+.multijoueur-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;
+}
+#user-profile-bar {
+    font-size: 0.95rem; color: #a5b5c1; font-weight: 500;
+}
+@media screen and (max-width: 768px) {
+    .multijoueur-grid { grid-template-columns: 1fr; }
+}
