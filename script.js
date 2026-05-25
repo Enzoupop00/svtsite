@@ -1,388 +1,155 @@
-document.addEventListener('DOMContentLoaded', () => {
+/* ==========================================
+   STYLE DU SYSTÈME DE CARTE D'INSCRIPTION
+   ========================================== */
+.auth-card-wrapper {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+    z-index: 5000;
+    padding: 20px;
+}
 
-    // ==========================================
-    // 1. EFFET ARRIÈRE-PLAN : BULLES (CONSERVÉ)
-    // ==========================================
-    const bubblesContainer = document.getElementById('bubbles');
-    function generateBubble() {
-        if(!bubblesContainer) return;
-        const bubble = document.createElement('div');
-        bubble.classList.add('bubble');
-        const size = Math.random() * 20 + 6;
-        bubble.style.width = `${size}px`;
-        bubble.style.height = `${size}px`;
-        bubble.style.left = `${Math.random() * 100}%`;
-        bubble.style.animationDuration = `${Math.random() * 6 + 6}s`;
-        bubblesContainer.appendChild(bubble);
-        setTimeout(() => bubble.remove(), 10000);
-    }
-    setInterval(generateBubble, 450);
+.auth-card {
+    background: linear-gradient(135deg, rgba(6, 28, 56, 0.85) 0%, rgba(2, 12, 27, 0.95) 100%);
+    border: 2px solid rgba(0, 210, 255, 0.35);
+    border-radius: 24px;
+    padding: 35px 30px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 210, 255, 0.15);
+    backdrop-filter: blur(15px);
+    position: relative;
+    overflow: hidden;
+    animation: cardEntrance 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
 
-    // Éléments du DOM d'Authentification / Sessions
-    const authContainer = document.getElementById('auth-container');
-    const mainApp = document.getElementById('main-app');
-    const authUsernameInput = document.getElementById('auth-username');
-    const authError = document.getElementById('auth-error');
-    const btnLogin = document.getElementById('btn-login');
-    const displayProfileName = document.getElementById('display-profile-name');
-    const btnLogout = document.getElementById('btn-logout');
+@keyframes cardEntrance {
+    from { transform: translateY(40px) scale(0.92); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
 
-    // Éléments Mini-jeu Solo d'origine
-    const btnStartClicker = document.getElementById('btn-start-clicker');
-    const selectDifficulty = document.getElementById('select-difficulty');
-    const clickerArena = document.getElementById('clicker-arena');
-    const clickerScoreDisplay = document.getElementById('clicker-score');
-    const clickerTimerDisplay = document.getElementById('clicker-timer');
+.auth-card::before {
+    content: '';
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(0, 210, 255, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
 
-    // Éléments Réseau / Lobby
-    const inviteSearchInput = document.getElementById('invite-search-username');
-    const btnSendInvite = document.getElementById('btn-send-invite');
-    const inviteStatus = document.getElementById('invite-status');
-    const incomingInviteBox = document.getElementById('incoming-invite-box');
-    const challengerName = document.getElementById('challenger-name');
-    const btnAcceptMatch = document.getElementById('btn-accept-match');
-    const btnRefuseMatch = document.getElementById('btn-refuse-match');
-    const leaderboardUl = document.getElementById('leaderboard-ul');
-    const leaderboardSearchFilter = document.getElementById('leaderboard-search-filter');
+.card-badge {
+    position: absolute; top: 15px; right: 15px;
+    background: rgba(0, 210, 255, 0.2);
+    border: 1px solid #00d2ff;
+    color: #00d2ff;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
 
-    // Éléments Match Multi
-    const arenaMatchWrapper = document.getElementById('arena-match-wrapper');
-    const matchMyScoreDisplay = document.getElementById('match-my-score');
-    const matchOppScoreDisplay = document.getElementById('match-opp-score');
-    const matchTimerDisplay = document.getElementById('match-timer');
-    const matchClickerArena = document.getElementById('match-clicker-arena');
+.auth-card h2 {
+    font-size: 2rem;
+    color: #fff;
+    text-align: left;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 10px rgba(0, 210, 255, 0.3);
+}
 
-    // Variables globales
-    let myUsername = "";
-    let socket = null;
-    let onlinePlayers = [];
-    let currentMatch = null; 
-    let myScore = 0;
-    let oppScore = 0;
-    let matchInterval = null;
-    let spawnInterval = null;
+.card-subtitle {
+    font-size: 0.9rem;
+    color: #a2b7ca;
+    line-height: 1.4;
+    margin-bottom: 25px;
+}
 
-    // Variables du Jeu Solo d'origine
-    let soloScore = 0;
-    let soloTimeLeft = 0;
-    let soloSpawnIntervalId;
-    let soloCountdownIntervalId;
-    let soloIsPlaying = false;
-    const trashItems = ['🍼', '🛍️', '🥤', '📦'];
-    const creatureItems = ['🪼', '🐟', '🐠', '🦀', '🐙'];
-    const difficultySettings = {
-        easy: { time: 60, spawnRate: 950 },
-        medium: { time: 45, spawnRate: 650 },
-        hard: { time: 30, spawnRate: 350 }
-    };
+/* Section Avatar */
+.avatar-preview-container {
+    display: flex; justify-content: center; margin-bottom: 20px;
+}
 
-    // ==========================================
-    // 2. PERSISTANCE DE CONNEXION AUTOMATIQUE
-    // ==========================================
-    const savedName = localStorage.getItem('oceania_pseudo');
-    if (savedName) {
-        initMultiplayer(savedName);
-    }
+.avatar-circle {
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, #0e3156 0%, #051429 100%);
+    border: 3px solid #00d2ff;
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 2.5rem;
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
 
-    btnLogin.addEventListener('click', () => {
-        const username = authUsernameInput.value.trim().toLowerCase().replace(/\s+/g, '');
-        if (username.length < 3) {
-            authError.textContent = "Votre pseudo doit faire au moins 3 caractères !";
-            return;
-        }
-        initMultiplayer(username);
-    });
+.avatar-selector {
+    margin-bottom: 25px;
+}
 
-    btnLogout.addEventListener('click', () => {
-        localStorage.removeItem('oceania_pseudo');
-        location.reload();
-    });
+.avatar-selector label {
+    display: block; font-size: 0.85rem; color: #809bb3; margin-bottom: 8px; font-weight: 500;
+}
 
-    // ==========================================
-    // 3. LOGIQUE RÉSEAU (RELAY PUBLIC WEBSOCKET)
-    // ==========================================
-    function initMultiplayer(username) {
-        myUsername = username;
-        localStorage.setItem('oceania_pseudo', username);
-        
-        authContainer.classList.add('hidden');
-        mainApp.classList.remove('hidden');
-        displayProfileName.textContent = myUsername.toUpperCase();
+.avatar-options {
+    display: flex; justify-content: space-between; background: rgba(5, 18, 36, 0.6);
+    padding: 8px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05);
+}
 
-        // Connexion au réseau libre partagé
-        socket = new WebSocket('wss://demo.piesocket.com/v3/channel_oceania_2026?api_key=VCXCEuvhGcBDP7XhiJJUDvR1e1D3YfV0w9IpIskB&notify_self=0');
+.avatar-opt {
+    font-size: 1.6rem; cursor: pointer; padding: 5px; border-radius: 8px;
+    transition: 0.2s; user-select: none;
+}
 
-        socket.onopen = () => {
-            sendNetMessage("ping_presence", { user: myUsername });
-        };
+.avatar-opt:hover { transform: scale(1.2); background: rgba(0, 210, 255, 0.15); }
+.avatar-opt.active { background: rgba(0, 210, 255, 0.25); border: 1px solid #00d2ff; transform: scale(1.1); }
 
-        socket.onmessage = (event) => {
-            try {
-                const msg = JSON.parse(event.data);
-                handleNetworkData(msg);
-            } catch(e) { }
-        };
-    }
+/* Formulaire Moderne Intégré */
+.card-form { display: flex; flex-direction: column; gap: 20px; }
 
-    function sendNetMessage(type, data) {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: type, ...data }));
-        }
-    }
+.input-group { position: relative; width: 100%; }
 
-    function handleNetworkData(msg) {
-        if (msg.type === "ping_presence") {
-            if (!onlinePlayers.includes(msg.user) && msg.user !== myUsername) {
-                onlinePlayers.push(msg.user);
-                updatePlayersList();
-            }
-            sendNetMessage("reply_presence", { target: msg.user, user: myUsername });
-        }
+.input-group input {
+    width: 100%; padding: 12px 5px;
+    background: transparent; border: none;
+    border-bottom: 2px solid rgba(0, 210, 255, 0.3);
+    color: #fff; font-size: 1.1rem; outline: none; transition: 0.3s;
+}
 
-        if (msg.type === "reply_presence" && msg.target === myUsername) {
-            if (!onlinePlayers.includes(msg.user)) {
-                onlinePlayers.push(msg.user);
-                updatePlayersList();
-            }
-        }
+.input-group label {
+    position: absolute; left: 5px; top: 12px; color: #6987a0;
+    pointer-events: none; transition: 0.3s ease all; font-size: 1.05rem;
+}
 
-        if (msg.type === "invite_request" && msg.target === myUsername) {
-            challengerName.textContent = msg.from.toUpperCase();
-            incomingInviteBox.classList.remove('hidden');
-            
-            btnAcceptMatch.onclick = () => {
-                incomingInviteBox.classList.add('hidden');
-                sendNetMessage("invite_response", { target: msg.from, from: myUsername, status: "accepted" });
-                setupMultiplayerGame(msg.from, false);
-            };
+/* Effets Focus Input */
+.input-group input:focus ~ label,
+.input-group input:not(:placeholder-shown) ~ label {
+    top: -12px; font-size: 0.85rem; color: #00d2ff; font-weight: bold;
+}
 
-            btnRefuseMatch.onclick = () => {
-                incomingInviteBox.classList.add('hidden');
-                sendNetMessage("invite_response", { target: msg.from, from: myUsername, status: "refused" });
-            };
-        }
+.input-group input:focus { border-bottom-color: #00d2ff; }
 
-        if (msg.type === "invite_response" && msg.target === myUsername) {
-            if (msg.status === "accepted") {
-                inviteStatus.style.color = "#2ed573";
-                inviteStatus.textContent = "Match accepté ! Lancement de l'arène...";
-                setupMultiplayerGame(msg.from, true);
-            } else {
-                inviteStatus.style.color = "#ff4757";
-                inviteStatus.textContent = `${msg.from} a décliné le combat.`;
-            }
-        }
+/* Bouton Soumission Carte */
+.btn-card-submit {
+    position: relative; background: #00d2ff; color: #020c1b;
+    border: none; padding: 15px; font-size: 1.05rem; font-weight: bold;
+    border-radius: 12px; cursor: pointer; overflow: hidden; transition: 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3);
+}
 
-        if (msg.type === "score_update" && msg.target === myUsername) {
-            oppScore = msg.score;
-            matchOppScoreDisplay.textContent = oppScore;
-        }
+.btn-card-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 210, 255, 0.5);
+}
 
-        if (msg.type === "timer_sync" && msg.target === myUsername) {
-            matchTimerDisplay.textContent = msg.time + "s";
-            if (msg.time <= 0) cleanEndMultiplayerMatch(msg.from);
-        }
-    }
+.error-msg { color: #ff4757; font-size: 0.85rem; font-weight: bold; text-align: center; min-height: 18px; }
 
-    // ==========================================
-    // 4. SYSTÈME DE FILTRE DE RECHERCHE DU LOBBY
-    // ==========================================
-    function updatePlayersList() {
-        const filterQuery = leaderboardSearchFilter.value.trim().toLowerCase();
-        leaderboardUl.innerHTML = "";
+/* Pilule de Profil Réduite (Navbar) */
+.profile-pill {
+    display: flex; align-items: center; background: rgba(5, 20, 39, 0.8);
+    padding: 6px 12px; border-radius: 30px; border: 1px solid rgba(0, 210, 255, 0.2);
+}
 
-        const filtered = onlinePlayers.filter(name => name.includes(filterQuery));
-
-        if (filtered.length === 0) {
-            leaderboardUl.innerHTML = "<li style='color:#647b93; font-style:italic; font-size:0.9rem;'>Aucun éco-citoyen connecté avec ce pseudo...</li>";
-            return;
-        }
-
-        filtered.forEach(player => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <div><span style="color:#2ed573; margin-right:5px;">🟢</span> ${player}</div>
-                <button class="btn-game" style="padding: 4px 10px; font-size: 0.8rem;" onclick="document.getElementById('invite-search-username').value='${player}'">Sélectionner</button>
-            `;
-            leaderboardUl.appendChild(li);
-        });
-    }
-
-    leaderboardSearchFilter.addEventListener('input', updatePlayersList);
-
-    btnSendInvite.addEventListener('click', () => {
-        const target = inviteSearchInput.value.trim().toLowerCase();
-        if (target === myUsername) {
-            inviteStatus.style.color = "#ff4757";
-            inviteStatus.textContent = "Vous ne pouvez pas vous inviter vous-même !";
-            return;
-        }
-        if(target === "") return;
-        inviteStatus.style.color = "#ff9f43";
-        inviteStatus.textContent = `Invitation envoyée à ${target}...`;
-        sendNetMessage("invite_request", { target: target, from: myUsername });
-    });
-
-    // ==========================================
-    // 5. FONCTIONNEMENT DU DUEL MULTIJOUEUR
-    // ==========================================
-    function setupMultiplayerGame(opponentName, isHost) {
-        currentMatch = opponentName;
-        myScore = 0;
-        oppScore = 0;
-        matchMyScoreDisplay.textContent = "0";
-        matchOppScoreDisplay.textContent = "0";
-        arenaMatchWrapper.classList.remove('hidden');
-        matchClickerArena.innerHTML = "";
-
-        if (isHost) {
-            let gameTime = 20; 
-            matchInterval = setInterval(() => {
-                gameTime--;
-                sendNetMessage("timer_sync", { target: opponentName, from: myUsername, time: gameTime });
-                matchTimerDisplay.textContent = gameTime + "s";
-                if (gameTime <= 0) {
-                    clearInterval(matchInterval);
-                    cleanEndMultiplayerMatch(opponentName);
-                }
-            }, 1000);
-        }
-
-        spawnInterval = setInterval(() => {
-            const trash = document.createElement('div');
-            trash.classList.add('ocean-entity');
-            trash.textContent = '🍼';
-            trash.style.left = `${Math.random() * 85 + 5}%`;
-            trash.style.top = `${Math.random() * 70 + 15}%`;
-
-            trash.addEventListener('mousedown', () => {
-                myScore++;
-                matchMyScoreDisplay.textContent = myScore;
-                sendNetMessage("score_update", { target: opponentName, score: myScore });
-                trash.remove();
-            });
-
-            matchClickerArena.appendChild(trash);
-            setTimeout(() => trash.remove(), 1500);
-        }, 600);
-    }
-
-    function cleanEndMultiplayerMatch(opponentName) {
-        clearInterval(spawnInterval);
-        clearInterval(matchInterval);
-        
-        let msg = "";
-        if (myScore > oppScore) msg = `🏆 Victoire contre ${opponentName} (${myScore} - ${oppScore}) ! 🎉`;
-        else if (myScore < oppScore) msg = `💀 Défaite face à ${opponentName} (${myScore} - ${oppScore}).`;
-        else msg = `⚖️ Égalité parfaite (${myScore} partout) !`;
-
-        alert(msg);
-        arenaMatchWrapper.classList.add('hidden');
-        inviteSearchInput.value = "";
-        inviteStatus.textContent = "";
-    }
-
-    // ==========================================
-    // 6. MINI-JEU 1 : LE NETTOYEUR (CONSERVÉ SOLO DIRECT)
-    // ==========================================
-    function spawnSoloEntity() {
-        if (!soloIsPlaying) return;
-        const entity = document.createElement('div');
-        entity.classList.add('ocean-entity');
-        
-        const isTrash = Math.random() < 0.6;
-        if (isTrash) {
-            entity.textContent = trashItems[Math.floor(Math.random() * trashItems.length)];
-            entity.dataset.type = "trash";
-        } else {
-            entity.textContent = creatureItems[Math.floor(Math.random() * creatureItems.length)];
-            entity.dataset.type = "creature";
-        }
-        
-        entity.style.left = `${Math.random() * 88 + 4}%`;
-        entity.style.top = `${Math.random() * 70 + 15}%`;
-        
-        entity.addEventListener('mousedown', () => {
-            if (entity.dataset.type === "trash") {
-                soloScore += 1;
-            } else {
-                soloScore -= 2;
-            }
-            clickerScoreDisplay.textContent = soloScore;
-            entity.remove();
-        });
-
-        clickerArena.appendChild(entity);
-        setTimeout(() => entity.remove(), 2000);
-    }
-
-    function endSoloGame() {
-        soloIsPlaying = false;
-        clearInterval(soloSpawnIntervalId);
-        clearInterval(soloCountdownIntervalId);
-        btnStartClicker.disabled = false;
-        btnStartClicker.textContent = "Relancer Mission Solo";
-        clickerArena.innerHTML = `<div id='game-welcome-msg'><h3>Temps écoulé ! ⏱️</h3><p>Score final : ${soloScore} points.</p></div>`;
-    }
-
-    btnStartClicker.addEventListener('click', () => {
-        soloIsPlaying = true;
-        soloScore = 0;
-        const diff = selectDifficulty.value;
-        soloTimeLeft = difficultySettings[diff].time;
-
-        btnStartClicker.disabled = true;
-        btnStartClicker.textContent = "Nettoyage en cours...";
-        clickerScoreDisplay.textContent = soloScore;
-        clickerTimerDisplay.textContent = soloTimeLeft + "s";
-        clickerArena.innerHTML = "";
-
-        soloSpawnIntervalId = setInterval(spawnSoloEntity, difficultySettings[diff].spawnRate);
-        soloCountdownIntervalId = setInterval(() => {
-            soloTimeLeft--;
-            clickerTimerDisplay.textContent = soloTimeLeft + "s";
-            if (soloTimeLeft <= 0) endSoloGame();
-        }, 1000);
-    });
-
-    // ==========================================
-    // 7. SECURE PANNEAU ADMIN DRAGGABLE (CONSERVÉ)
-    // ==========================================
-    const btnAdminLock = document.getElementById('btn-admin-lock');
-    const adminPanel = document.getElementById('admin-panel');
-    const btnCloseAdmin = document.getElementById('btn-close-admin');
-    const adminPanelHeader = document.getElementById('admin-panel-header');
-    const resetScoresBtn = document.getElementById('reset-scores-btn');
-
-    btnAdminLock.addEventListener('click', () => {
-        const code = prompt("Entrez le code administrateur :");
-        if (code === "1234") adminPanel.classList.remove('hidden');
-        else if (code !== null) alert("Code erroné !");
-    });
-
-    btnCloseAdmin.addEventListener('click', () => adminPanel.classList.add('hidden'));
-    resetScoresBtn.addEventListener('click', () => {
-        if(confirm("Voulez-vous vider vos données locales ?")) {
-            localStorage.clear();
-            location.reload();
-        }
-    });
-
-    let isDragging = false, offsetX, offsetY;
-    adminPanelHeader.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        offsetX = e.clientX - adminPanel.offsetLeft;
-        offsetY = e.clientY - adminPanel.offsetTop;
-    });
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        adminPanel.style.left = `${e.clientX - offsetX}px`;
-        adminPanel.style.top = `${e.clientY - offsetY}px`;
-    });
-    document.addEventListener('mouseup', () => isDragging = false);
-
-    // Maintien de la visibilité sur la liste des joueurs
-    setInterval(() => {
-        if(myUsername) sendNetMessage("ping_presence", { user: myUsername });
-    }, 4000);
-});
+#btn-logout {
+    background: rgba(255, 71, 87, 0.15); border: none; color: #ff4757;
+    width: 24px; height: 24px; border-radius: 50%; display: flex;
+    justify-content: center; align-items: center; font-weight: bold;
+    cursor: pointer; margin-left: 10px; transition: 0.2s;
+}
+#btn-logout:hover { background: #ff4757; color: #fff; transform: scale(1.08); }
