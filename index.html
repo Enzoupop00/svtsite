@@ -3,53 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oceania Odyssée - Multi Sans Configuration</title>
+    <title>Oceania Odyssée - Version Intégrale Multijoueur</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="video-container">
+        <video autoplay muted loop playsinline id="bg-video">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-sea-turtle-swimming-underwater-41901-large.mp4" type="video/mp4">
+        </video>
         <div class="overlay"></div>
+        <div class="bubbles-container" id="bubbles"></div>
     </div>
 
     <div id="auth-container" class="shadow-box style-modal">
         <h2>𓆉 Connexion Oceania</h2>
-        <p>Choisis un pseudo unique pour pouvoir défier les autres joueurs en ligne.</p>
+        <p>Choisissez un pseudo unique pour sauvegarder votre session et défier d'autres joueurs en direct.</p>
         <div id="auth-form">
-            <input type="text" id="auth-username" placeholder="Ton pseudo (ex: enzoupop55)" maxlength="12">
-            <button id="btn-login" class="btn-game" style="margin-top: 15px; width: 100%;">Rejoindre le Lobby</button>
+            <input type="text" id="auth-username" placeholder="Votre pseudo (ex: enzoupop55)" maxlength="12">
+            <button id="btn-login" class="btn-game" style="margin-top: 15px; width: 100%;">Rejoindre l'Aventure</button>
             <p id="auth-error" style="color: #ff4757; margin-top: 10px; font-size: 0.9rem; font-weight: bold;"></p>
         </div>
     </div>
 
     <div id="main-app" class="hidden">
+        
         <header>
             <nav class="navbar">
                 <div class="logo">𓆉 Bio<span>Marine</span></div>
+                <ul class="nav-links">
+                    <li><a href="#simulateur">Simulateur</a></li>
+                    <li><a href="#nettoyeur">Nettoyeur (Solo)</a></li>
+                    <li><a href="#lobby-multi">Hub Multijoueur</a></li>
+                    <li><a href="#quiz">Quiz Évolutif</a></li>
+                    <li><button id="btn-admin-lock" style="background:none; border:none; color:#00d2ff; cursor:pointer; text-decoration:underline;">Admin</button></li>
+                </ul>
                 <div id="user-profile-bar">
-                    Joueur : <span id="display-profile-name" class="highlight">...</span>
-                    <button id="btn-logout" style="background:none; border:none; color:#ff4757; cursor:pointer; margin-left:15px; text-decoration:underline;">Quitter</button>
+                    <span id="display-profile-name" class="highlight">...</span>
+                    <button id="btn-logout" style="background:none; border:none; color:#ff4757; cursor:pointer; margin-left:10px; text-decoration:underline; font-size:0.85rem;">[Quitter]</button>
                 </div>
             </nav>
         </header>
 
-        <section class="content-section dark-bg" style="margin-top: 100px;">
+        <section id="simulateur" class="content-section dark-bg" style="margin-top: 110px;">
+            <h2>Simulateur de Marée Noire</h2>
+            <p class="intro">Analysez l'impact de la pollution d'un hydrocarbure sur l'écosystème marin.</p>
+            <div class="shadow-box">
+                <p style="text-align: center; color: #a5b5c1;">[Insère ici tes contrôles et visuels du simulateur de marée noire d'origine]</p>
+            </div>
+        </section>
+
+        <section id="nettoyeur" class="content-section dark-bg">
+            <h2>Mini-Jeu : Le Nettoyeur de l'Océan (Solo)</h2>
+            <p class="intro">Éliminez un maximum de déchets plastiques en évitant la faune marine !</p>
+            
+            <div class="game-container shadow-box">
+                <div class="game-controls">
+                    <select id="select-difficulty" class="btn-game" style="background:#0c1a2d; color:#fff; border:1px solid #00d2ff;">
+                        <option value="easy">Niveau : Facile (60s)</option>
+                        <option value="medium" selected>Niveau : Moyen (45s)</option>
+                        <option value="hard">Niveau : Difficile (30s)</option>
+                    </select>
+                    <button id="btn-start-clicker" class="btn-game">Lancer la Mission Solo</button>
+                </div>
+
+                <div class="game-stats" style="margin-top:15px;">
+                    <div>Score Local : <span id="clicker-score" class="highlight">0</span> pts</div>
+                    <div id="clicker-timer" style="font-size:1.5rem; font-weight:bold; color:#ff9f43;">0s</div>
+                </div>
+
+                <div id="clicker-arena" class="game-arena">
+                    <div id="game-welcome-msg">
+                        <h3>Prêt pour la mission ? 🎮</h3>
+                        <p>Sélectionnez votre difficulté et cliquez sur démarrer.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="lobby-multi" class="content-section dark-bg">
             <h2>Salle d'Attente Multijoueur</h2>
-            <p class="intro">Envoie une invitation directe ou regarde qui est en ligne.</p>
+            <p class="intro">Défiez un ami en ligne ou cherchez un rival actif.</p>
 
             <div class="multijoueur-grid">
-                
                 <div class="shadow-box">
-                    <h3>⚔️ Défier un ami</h3>
-                    <p style="font-size: 0.9rem; color: #a5b5c1; margin-bottom: 15px;">Écris le pseudo exact de ta cible pour lui envoyer un duel.</p>
+                    <h3>⚔️ Envoyer un Défi</h3>
+                    <p style="font-size: 0.9rem; color: #a5b5c1; margin-bottom: 15px;">Entrez le pseudo exact du joueur (Ex: enzoupop55).</p>
                     <div style="display: flex; gap: 10px;">
-                        <input type="text" id="invite-search-username" placeholder="Ex: enzoupop55" style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #00d2ff; background: #0c1a2d; color: #fff;">
+                        <input type="text" id="invite-search-username" placeholder="Entrez le pseudo..." style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #00d2ff; background: #0c1a2d; color: #fff;">
                         <button id="btn-send-invite" class="btn-game">Inviter</button>
                     </div>
                     <p id="invite-status" style="margin-top: 10px; font-size: 0.9rem; font-weight: bold;"></p>
 
                     <div id="incoming-invite-box" class="hidden" style="background: rgba(255, 159, 67, 0.2); border: 2px solid #ff9f43; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center;">
-                        <p>⚠️ <span id="challenger-name" style="font-weight: bold; color: #ff9f43;">...</span> te défie en duel !</p>
+                        <p>⚠️ <span id="challenger-name" style="font-weight: bold; color: #ff9f43;">...</span> vous défie en duel !</p>
                         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
                             <button id="btn-accept-match" class="btn-game" style="background: #2ed573; padding: 6px 15px;">Accepter</button>
                             <button id="btn-refuse-match" class="btn-game" style="background: #ff4757; padding: 6px 15px;">Refuser</button>
@@ -58,8 +105,8 @@
                 </div>
 
                 <div class="leaderboard-container shadow-box">
-                    <h3>👥 Joueurs Connectés</h3>
-                    <input type="text" id="leaderboard-search-filter" placeholder="🔍 Filtrer les joueurs par pseudo..." style="width: 100%; padding: 10px; border: 1px solid rgba(0, 210, 255, 0.3); background: #071324; color: #fff; border-radius: 5px; margin-bottom: 15px; outline: none;">
+                    <h3>👥 Éco-Citoyens En Ligne</h3>
+                    <input type="text" id="leaderboard-search-filter" placeholder="🔍 Filtrer les joueurs connectés..." style="width: 100%; padding: 10px; border: 1px solid rgba(0, 210, 255, 0.3); background: #071324; color: #fff; border-radius: 5px; margin-bottom: 15px; outline: none;">
                     <ul class="leaderboard-list" id="leaderboard-ul">
                         </ul>
                 </div>
@@ -72,13 +119,35 @@
                         <div style="font-size: 1.8rem; color: #ff9f43; font-weight: bold;" id="match-timer">20s</div>
                         <div>Adversaire : <span id="match-opp-score" class="highlight" style="color: #ff4757;">0</span></div>
                     </div>
-                    <div id="match-clicker-arena" class="game-arena" style="height: 380px; position: relative;">
+                    <div id="match-clicker-arena" class="game-arena" style="height: 380px;">
                         </div>
                 </div>
             </div>
-
         </section>
+
+        <section id="quiz" class="content-section dark-bg">
+            <h2>Quiz Évolutif BioMarine</h2>
+            <p class="intro">Testez vos connaissances écologiques pour débloquer de nouveaux badges.</p>
+            <div class="shadow-box">
+                <p style="text-align: center; color: #a5b5c1;">[Insère ici ton système de questions et réponses d'origine pour ton quiz]</p>
+            </div>
+        </section>
+
+        <div id="admin-panel" class="shadow-box hidden" style="position: absolute; top: 150px; left: 50px; width: 320px; z-index: 2000; padding: 0; overflow: hidden; border: 2px solid #ff4757;">
+            <div id="admin-panel-header" style="background: #ff4757; color: #fff; padding: 10px; cursor: move; font-weight: bold; display: flex; justify-content: space-between;">
+                <span>🛠️ Panneau Super-Admin</span>
+                <button id="btn-close-admin" style="background: none; border: none; color: white; font-weight: bold; cursor: pointer;">X</button>
+            </div>
+            <div style="padding: 15px; background: #040d1a;">
+                <button id="reset-scores-btn" class="btn-game" style="background:#ff4757; width:100%; font-size:0.9rem;">Réinitialiser Données Locales</button>
+            </div>
+        </div>
+
     </div>
+
+    <footer>
+        <p>&copy; 2026 BioMarine Interactif - Éduquer par le jeu.</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>
