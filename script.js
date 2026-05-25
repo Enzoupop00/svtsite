@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     setInterval(generateBubble, 450);
 
-
     // ==========================================
     // 2. SIMULATEUR D'IMPACT ÉCOLOGIQUE
     // ==========================================
@@ -65,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ==========================================
-    // 3. MINI-JEU 1 : LE NETTOYEUR & LEADERBOARD GLOBAL
+    // 3. MINI-JEU 1 : LE NETTOYEUR (CLASSEMENT GLOBAL)
     // ==========================================
     const btnStartClicker = document.getElementById('btn-start-clicker');
     const selectDifficulty = document.getElementById('select-difficulty');
@@ -73,8 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const clickerScoreDisplay = document.getElementById('clicker-score');
     const clickerTimerDisplay = document.getElementById('clicker-timer');
     const leaderboardUl = document.getElementById('leaderboard-ul');
-    const btnClearScores = document.getElementById('btn-clear-scores');
     const tabButtons = document.querySelectorAll('.tab-btn');
+
+    // Modal Éléments
+    const modalPseudoOverlay = document.getElementById('modal-pseudo-overlay');
+    const modalScoreDisplay = document.getElementById('modal-score-display');
+    const inputPlayerPseudo = document.getElementById('input-player-pseudo');
+    const btnSubmitPseudo = document.getElementById('btn-submit-pseudo');
 
     let clickerScore = 0;
     let timeLeft = 0;
@@ -82,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let countdownIntervalId;
     let isPlaying = false;
     let gameDifficulty = 'medium'; 
-    let currentActiveTab = 'easy'; // Difficultée affichée sur le tableau
+    let currentActiveTab = 'easy';
 
     const trashItems = ['🍼', '🛍️', '🥤', '📦'];
     const creatureItems = ['🪼', '🐟', '🐠', '🦀', '🐙'];
@@ -93,21 +97,16 @@ document.addEventListener('DOMContentLoaded', () => {
         hard: { time: 30, spawnRate: 350, speed: '2.1s' }
     };
 
-    // Charger le leaderboard global filtré par l'onglet sélectionné
     function renderLeaderboard(difficultyFilter) {
-        let allScores = JSON.parse(localStorage.getItem('oceanGlobalScores')) || [];
-        
-        // Filtrer uniquement pour la difficulté demandée
+        let allScores = JSON.parse(localStorage.getItem('oceanGlobalScoresMaster')) || [];
         let filteredScores = allScores.filter(item => item.diff === difficultyFilter);
         
         leaderboardUl.innerHTML = "";
-        
         if (filteredScores.length === 0) {
-            leaderboardUl.innerHTML = "<li style='color:#647b93; font-style:italic; font-size:0.9rem;'>Aucun score enregistré dans cette catégorie.</li>";
+            leaderboardUl.innerHTML = "<li style='color:#647b93; font-style:italic; font-size:0.9rem;'>Aucun score enregistré ici.</li>";
             return;
         }
 
-        // Tri décroissant et affichage du top 5
         filteredScores.sort((a, b) => b.score - a.score);
         let topFive = filteredScores.slice(0, 5);
 
@@ -121,13 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Sauvegarde globale
     function saveGlobalScore(name, score, diff) {
-        let allScores = JSON.parse(localStorage.getItem('oceanGlobalScores')) || [];
+        let allScores = JSON.parse(localStorage.getItem('oceanGlobalScoresMaster')) || [];
         allScores.push({ name: name, score: score, diff: diff });
-        localStorage.setItem('oceanGlobalScores', JSON.stringify(allScores));
+        localStorage.setItem('oceanGlobalScoresMaster', JSON.stringify(allScores));
         
-        // Basculer l'affichage du leaderboard sur l'onglet correspondant à la partie jouée
         currentActiveTab = diff;
         tabButtons.forEach(btn => {
             btn.classList.remove('active');
@@ -136,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderLeaderboard(currentActiveTab);
     }
 
-    // Gestion du clic sur les onglets du leaderboard
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -190,17 +186,23 @@ document.addEventListener('DOMContentLoaded', () => {
         clickerArena.innerHTML = `
             <div id='game-welcome-msg'>
                 <h3 style='color:#00d2ff; margin-bottom:5px;'>Temps écoulé ! ⏱️</h3>
-                <p>Score récolté : <span class='highlight'>${clickerScore} points</span>.</p>
+                <p>Analyse des données terminée.</p>
             </div>
         `;
 
-        setTimeout(() => {
-            const playerName = prompt(`Partie finie (${gameDifficulty.toUpperCase()}) ! Score : ${clickerScore} pts.\nEntrez votre pseudonyme :`);
-            if (playerName && playerName.trim() !== "") {
-                saveGlobalScore(playerName.trim(), clickerScore, gameDifficulty);
-            }
-        }, 300);
+        // Ouvre la MODAL stylée centrée
+        modalScoreDisplay.textContent = clickerScore;
+        inputPlayerPseudo.value = "";
+        modalPseudoOverlay.classList.remove('hidden');
     }
+
+    btnSubmitPseudo.addEventListener('click', () => {
+        let pseudo = inputPlayerPseudo.value.trim();
+        if (pseudo === "") pseudo = "Anonyme";
+        
+        saveGlobalScore(pseudo, clickerScore, gameDifficulty);
+        modalPseudoOverlay.classList.add('hidden'); // Ferme la boîte
+    });
 
     btnStartClicker.addEventListener('click', () => {
         isPlaying = true;
@@ -224,31 +226,92 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     });
 
-    btnClearScores.addEventListener('click', () => {
-        if(confirm("Voulez-vous effacer l'intégralité de la base de données des scores ?")) {
-            localStorage.removeItem('oceanGlobalScores');
-            renderLeaderboard(currentActiveTab);
-        }
-    });
-
-    // Initialisation du premier tableau de vision (Facile par défaut)
     renderLeaderboard(currentActiveTab);
 
 
     // ==========================================
-    // 4. MINI-JEU 2 : LE GRAND QUIZ ÉVOLUTIF (15 QUESTIONS)
+    // 4. PANNEAU ADMIN SÉCURISÉ & DRAGGABLE (GRABABLE)
+    // ==========================================
+    const btnAdminLock = document.getElementById('btn-admin-lock');
+    const adminPanel = document.getElementById('admin-panel');
+    const btnCloseAdmin = document.getElementById('btn-close-admin');
+    const adminPanelHeader = document.getElementById('admin-panel-header');
+
+    // Boutons d'actions Admin
+    const resetEasyBtn = document.getElementById('reset-easy-btn');
+    const resetMediumBtn = document.getElementById('reset-medium-btn');
+    const resetHardBtn = document.getElementById('reset-hard-btn');
+    const resetAllBtn = document.getElementById('reset-all-btn');
+
+    btnAdminLock.addEventListener('click', () => {
+        const code = prompt("Entrez le code d'accès administrateur à 4 chiffres :");
+        if (code === "1234") { // CODE SECRET DE MODIFICATION
+            adminPanel.classList.remove('hidden');
+        } else if (code !== null) {
+            alert("Code erroné ! Accès refusé.");
+        }
+    });
+
+    btnCloseAdmin.addEventListener('click', () => adminPanel.classList.add('hidden'));
+
+    // Fonctions de Nettoyage Sélectif du Leaderboard Global
+    function deleteDifficultyScores(difficulty) {
+        if(confirm(`Voulez-vous effacer les scores de la catégorie [${difficulty.toUpperCase()}] ?`)) {
+            let allScores = JSON.parse(localStorage.getItem('oceanGlobalScoresMaster')) || [];
+            let cleanScores = allScores.filter(item => item.diff !== difficulty);
+            localStorage.setItem('oceanGlobalScoresMaster', JSON.stringify(cleanScores));
+            renderLeaderboard(currentActiveTab);
+        }
+    }
+
+    resetEasyBtn.addEventListener('click', () => deleteDifficultyScores('easy'));
+    resetMediumBtn.addEventListener('click', () => deleteDifficultyScores('medium'));
+    resetHardBtn.addEventListener('click', () => deleteDifficultyScores('hard'));
+    
+    resetAllBtn.addEventListener('click', () => {
+        if(confirm("🚨 ALERTE : Supprimer TOUS les scores de TOUTES les difficultés définitivement ?")) {
+            localStorage.removeItem('oceanGlobalScoresMaster');
+            renderLeaderboard(currentActiveTab);
+        }
+    });
+
+    // --- SYSTEME DRAGGABLE FLUIDE (GRAB) ---
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    adminPanelHeader.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - adminPanel.offsetLeft;
+        offsetY = e.clientY - adminPanel.offsetTop;
+        adminPanelHeader.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        adminPanel.style.left = `${e.clientX - offsetX}px`;
+        adminPanel.style.top = `${e.clientY - offsetY}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        adminPanelHeader.style.cursor = 'move';
+    });
+
+
+    // ==========================================
+    // 5. MINI-JEU 2 : LE GRAND QUIZ ÉVOLUTIF (15 QUESTIONS)
     // ==========================================
     const quizDatabase = {
         easy: [
             { q: "Quel déchet trouve-t-on en masse sur les plages ?", o: ["Les bouteilles en verre", "Les mégots et plastiques", "Les restes de bois artificiels"], a: 1 },
-            { q: "Quel animal marin est célèbre pour manger des sacs plastiques en pensant que ce sont des méduses ?", o: ["La tortue marine", "Le requin blanc", "L'étoile de mer"], a: 0 },
+            { q: "Quel animal marin mange des sacs plastiques en pensant que ce sont des méduses ?", o: ["La tortue marine", "Le requin blanc", "L'étoile de mer"], a: 0 },
             { q: "D'où provient la majorité de la pollution plastique des océans ?", o: ["Des navires de croisière", "De la terre ferme (fleuves et rivières)", "Des plates-formes pétrolières"], a: 1 },
             { q: "Que signifie le sigle 'Zéro Déchet' dans la protection de la nature ?", o: ["Tout brûler", "Réduire, réutiliser et recycler au maximum", "Jeter dans des poubelles violettes"], a: 1 },
             { q: "Les coraux sont considérés comme des :", o: ["Animaux marins vivants", "Plantes aquatiques colorées", "Roches minérales décoratives"], a: 0 }
         ],
         medium: [
-            { q: "Quel pourcentage de l'oxygène de notre planète est généré par les océans (le phytoplancton) ?", o: ["Environ 20%", "Environ 50%", "Plus de 90%"], a: 1 },
-            { q: "Qu'appelle-t-on le '7ème continent' ?", o: ["Un nouvel archipel volcanique", "Une immense zone d'accumulation de plastiques dans le Pacifique", "La calotte glaciaire de l'Arctique"], a: 1 },
+            { q: "Quel pourcentage de l'oxygène de notre planète est généré par le phytoplancton ?", o: ["Environ 20%", "Environ 50%", "Plus de 90%"], a: 1 },
+            { q: "Qu'appelle-t-on le '7ème continent' ?", o: ["Un nouvel archipel volcanique", "Une immense décharge de débris plastiques flottants", "La calotte glaciaire de l'Arctique"], a: 1 },
             { q: "Quelle est la cause principale du blanchissement destructeur des coraux ?", o: ["Le manque de poissons", "L'élévation de la température marine", "Le passage des sous-marins"], a: 1 },
             { q: "Combien de temps met une bouteille plastique standard pour se dégrader ?", o: ["Environ 10 ans", "Environ 150 ans", "Environ 450 ans"], a: 2 },
             { q: "Quel est l'impact des microplastiques sur les poissons ?", o: ["Ils les aident à flotter", "Ils s'accumulent dans leur corps et les empoisonnent", "Ils purifient leur estomac"], a: 1 }
@@ -263,8 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let quizLevelsOrder = ['easy', 'medium', 'hard'];
-    let currentLevelIndex = 0; // 0=Easy, 1=Medium, 2=Hard
-    let currentQuestionIndex = 0; // 0 à 4 par niveau
+    let currentLevelIndex = 0; 
+    let currentQuestionIndex = 0; 
     let globalQuizScore = 0;
 
     const quizQuestion = document.getElementById('quiz-question');
@@ -280,13 +343,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentLevelKey = quizLevelsOrder[currentLevelIndex];
         let questionsList = quizDatabase[currentLevelKey];
 
-        // Vérifie si on a épuisé les questions du niveau en cours
         if (currentQuestionIndex >= questionsList.length) {
-            currentLevelIndex++; // Passe au niveau suivant
-            currentQuestionIndex = 0; // Reset l'index interne
+            currentLevelIndex++; 
+            currentQuestionIndex = 0; 
             
             if (currentLevelIndex >= quizLevelsOrder.length) {
-                // FIN ABSOLUE DU QUIZ (15 questions faites)
                 showQuizResults();
                 return;
             }
@@ -294,7 +355,6 @@ document.addEventListener('DOMContentLoaded', () => {
             questionsList = quizDatabase[currentLevelKey];
         }
 
-        // Mises à jour des libellés de l'interface
         let levelNamesHTML = { easy: "<span style='color:#2ed573;'>Facile</span>", medium: "<span style='color:#ff9f43;'>Moyen</span>", hard: "<span style='color:#ff4757;'>Difficile ⚡</span>" };
         quizLevelIndicator.innerHTML = `Niveau : ${levelNamesHTML[currentLevelKey]}`;
         quizProgressIndicator.textContent = `Question ${currentQuestionIndex + 1} / 5`;
@@ -314,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleQuizAnswer(button, selectedIdx, correctIdx) {
         const allButtons = quizOptions.querySelectorAll('.btn-option');
-        allButtons.forEach(btn => btn.style.pointerEvents = 'none'); // Bloque les clics simultanés
+        allButtons.forEach(btn => btn.style.pointerEvents = 'none');
 
         if (selectedIdx === correctIdx) {
             globalQuizScore++;
@@ -339,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (globalQuizScore <= 5) badge = "Niveau : Apprenti Moussaillon 🌊. Continuez à vous informer !";
         else if (globalQuizScore <= 10) badge = "Niveau : Gardien de la Mer 🐬. Très bonnes connaissances !";
         else if (globalQuizScore < 15) badge = "Niveau : Défenseur des Océans 🐋. Excellent score !";
-        else badge = "Niveau : Dieu Poséidon 🔱. Perfection absolue, l'océan vous remercie !";
+        else badge = "Niveau : Dieu Poséidon 🔱. Perfection absolue !";
         
         document.getElementById('quiz-badge').textContent = badge;
     }
@@ -353,12 +413,10 @@ document.addEventListener('DOMContentLoaded', () => {
         loadEvolutiveQuestion();
     });
 
-    // Lancement du quiz au chargement
     loadEvolutiveQuestion();
 
-
     // ==========================================
-    // 5. NAV MOBILE & SCROLL REVEAL
+    // 6. NAVIGATION MOBILE & SCROLL REVEAL
     // ==========================================
     const burger = document.querySelector('.burger');
     const nav = document.querySelector('.nav-links');
